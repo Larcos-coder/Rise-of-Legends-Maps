@@ -1,0 +1,26 @@
+void game_callback on_game_frame() {
+make_alliance ("1", "2");
+make_alliance ("1", "3");
+make_alliance ("1", "4");
+make_alliance ("2", "1");
+make_alliance ("2", "3");
+make_alliance ("2", "4");
+make_alliance ("3", "1");
+make_alliance ("3", "2");
+make_alliance ("3", "4");
+make_alliance ("4", "1");
+make_alliance ("4", "2");
+make_alliance ("4", "3");
+make_alliance ("5", "6");
+make_alliance ("5", "7");
+make_alliance ("5", "8");
+make_alliance ("6", "7");
+make_alliance ("6", "5");
+make_alliance ("6", "8");
+make_alliance ("7", "5");
+make_alliance ("7", "6");
+make_alliance ("7", "8");
+make_alliance ("8", "5");
+make_alliance ("8", "6");
+make_alliance ("8", "7");
+}

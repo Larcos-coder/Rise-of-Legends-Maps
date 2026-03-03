@@ -1,0 +1,431 @@
+void game_callback on_game_frame () {
+
+  unit_play_animation("priest1", "harvest");
+  unit_play_animation("priest2", "harvest");
+  unit_play_animation("priest3", "harvest");
+  unit_play_animation("priest4", "harvest");
+  unit_play_animation("priest5", "harvest");
+  unit_play_animation("nomad1", "harvest");
+  unit_play_animation("nomad2", "harvest");
+  unit_play_animation("nomad3", "harvest");
+
+  Leader RED = "1";
+  Leader BLUE = "2";
+  Leader GREEN = "3";
+  Leader YELLOW = "4";
+  Leader CYAN = "5";
+  Leader ORANGE = "6";
+  Leader PURPLE = "7";
+  Leader PINK = "8";
+
+  labels {
+    SETUP_TIMER = 50, // Начало игры в секундах.
+    FIRST_ECO_BUST_TIMER = 300, // Первый экономический буст в секундах.
+    SECOND_ECO_BUST_TIMER = 600, // Второй экономический буст в секундах.
+    THIRD_ECO_BUST_TIMER = 900, // Третий экономический буст в секундах.
+    FOURTH_ECO_BUST_TIMER = 1200, // Четвертый экономический буст в секундах.
+  }
+
+  run_once {
+
+  start_cast_timer("PEACE");
+
+   //Team One - "North"
+   make_alliance (RED, BLUE);
+   make_alliance (RED, GREEN);
+   make_alliance (RED, YELLOW);
+
+   make_alliance (BLUE, RED);
+   make_alliance (BLUE, GREEN);
+   make_alliance (BLUE, YELLOW);
+
+   make_alliance (GREEN, BLUE);
+   make_alliance (GREEN, RED);
+   make_alliance (GREEN, YELLOW);
+
+   //Team Two - "South"
+
+   make_alliance (CYAN, ORANGE);
+   make_alliance (CYAN, PURPLE);
+   make_alliance (CYAN, PINK);
+
+   make_alliance (PURPLE, ORANGE);
+   make_alliance (PURPLE, CYAN);
+   make_alliance (PURPLE, PINK);
+
+   make_alliance (PINK, ORANGE);
+   make_alliance (PINK, PURPLE);
+   make_alliance (PINK, CYAN);
+
+    set_commerce_cap(RED, 10000);
+    set_commerce_cap(BLUE, 10000);
+    set_commerce_cap(GREEN, 10000);
+    set_commerce_cap(YELLOW, 10000);
+    set_commerce_cap(CYAN, 10000);
+    set_commerce_cap(ORANGE, 10000);
+    set_commerce_cap(PURPLE, 10000);
+    set_commerce_cap(PINK, 10000);
+
+     set_timer("SetupTime", SETUP_TIMER);
+   
+     set_timer("FirstEcoBust", FIRST_ECO_BUST_TIMER);
+     set_timer("SecondEcoBust", SECOND_ECO_BUST_TIMER);
+     set_timer("ThirdEcoBust", THIRD_ECO_BUST_TIMER);
+     set_timer("FourthEcoBust", FOURTH_ECO_BUST_TIMER);
+  }
+
+  if(num_buildings(RED) == 0) {
+
+    defeat(RED);
+  }
+
+  if(num_buildings(BLUE) == 0) {
+
+    defeat(BLUE);
+  }
+
+  if(num_buildings(GREEN) == 0) {
+
+    defeat(GREEN);
+  }
+
+  if(num_buildings(YELLOW) == 0) {
+
+    defeat(YELLOW);
+  }
+
+  if(num_buildings(CYAN) == 0) {
+
+    defeat(CYAN);
+  }
+
+  if(num_buildings(ORANGE) == 0) {
+
+    defeat(ORANGE);
+  }
+
+  if(num_buildings(PURPLE) == 0) {
+
+    defeat(PURPLE);
+  }
+
+  if(num_buildings(PINK) == 0) {
+
+    defeat(PINK);
+  }
+
+  trigger(timer_expired("SetupTime")){
+  
+   bubble_text_cent_screen("First Economic Bust!");
+   set_base_rate(RED, "wealth", 50);
+   set_base_rate(BLUE, "wealth", 50);
+   set_base_rate(GREEN, "wealth", 50);
+   set_base_rate(YELLOW, "wealth", 50);
+   set_base_rate(CYAN, "wealth", 50);
+   set_base_rate(ORANGE, "wealth", 50);
+   set_base_rate(PURPLE, "wealth", 50);
+   set_base_rate(PINK, "wealth", 50);
+
+   set_base_rate(RED, "timonium", 25);
+   set_base_rate(BLUE, "timonium", 25);
+   set_base_rate(GREEN, "timonium", 25);
+   set_base_rate(YELLOW, "timonium", 25);
+   set_base_rate(CYAN, "timonium", 25);
+   set_base_rate(ORANGE, "timonium", 25);
+   set_base_rate(PURPLE, "timonium", 25);
+   set_base_rate(PINK, "timonium", 25);
+  }
+  
+  trigger(timer_expired("FirstEcoBust")){
+  
+   bubble_text_cent_screen("Second Economic Bust!");
+   set_base_rate(RED, "wealth", 100);
+   set_base_rate(BLUE, "wealth", 100);
+   set_base_rate(GREEN, "wealth", 100);
+   set_base_rate(YELLOW, "wealth", 100);
+   set_base_rate(CYAN, "wealth", 100);
+   set_base_rate(ORANGE, "wealth", 100);
+   set_base_rate(PURPLE, "wealth", 100);
+   set_base_rate(PINK, "wealth", 100);
+
+   set_base_rate(RED, "timonium", 50);
+   set_base_rate(BLUE, "timonium", 50);
+   set_base_rate(GREEN, "timonium", 50);
+   set_base_rate(YELLOW, "timonium", 50);
+   set_base_rate(CYAN, "timonium", 50);
+   set_base_rate(ORANGE, "timonium", 50);
+   set_base_rate(PURPLE, "timonium", 50);
+   set_base_rate(PINK, "timonium", 50);
+  }
+
+  trigger(timer_expired("SecondEcoBust")){
+
+   bubble_text_cent_screen("Third Economic Bust!");
+   set_base_rate(RED, "wealth", 150);
+   set_base_rate(BLUE, "wealth", 150);
+   set_base_rate(GREEN, "wealth", 150);
+   set_base_rate(YELLOW, "wealth", 150);
+   set_base_rate(CYAN, "wealth", 150);
+   set_base_rate(ORANGE, "wealth", 150);
+   set_base_rate(PURPLE, "wealth", 150);
+   set_base_rate(PINK, "wealth", 150);
+
+   set_base_rate(RED, "timonium", 75);
+   set_base_rate(BLUE, "timonium", 75);
+   set_base_rate(GREEN, "timonium", 75);
+   set_base_rate(YELLOW, "timonium", 75);
+   set_base_rate(CYAN, "timonium", 75);
+   set_base_rate(ORANGE, "timonium", 75);
+   set_base_rate(PURPLE, "timonium", 75);
+   set_base_rate(PINK, "timonium", 75);
+  }
+
+  trigger(timer_expired("ThirdEcoBust")){
+
+   bubble_text_cent_screen("Fourth Economic Bust!");
+   set_base_rate(RED, "wealth", 200);
+   set_base_rate(BLUE, "wealth", 200);
+   set_base_rate(GREEN, "wealth", 200);
+   set_base_rate(YELLOW, "wealth", 200);
+   set_base_rate(CYAN, "wealth", 200);
+   set_base_rate(ORANGE, "wealth", 200);
+   set_base_rate(PURPLE, "wealth", 200);
+   set_base_rate(PINK, "wealth", 200);
+
+   set_base_rate(RED, "timonium", 100);
+   set_base_rate(BLUE, "timonium", 100);
+   set_base_rate(GREEN, "timonium", 100);
+   set_base_rate(YELLOW, "timonium", 100);
+   set_base_rate(CYAN, "timonium", 100);
+   set_base_rate(ORANGE, "timonium", 100);
+   set_base_rate(PURPLE, "timonium", 100);
+   set_base_rate(PINK, "timonium", 100);
+  }
+
+  trigger(timer_expired("FourthEcoBust")){
+
+   bubble_text_cent_screen("Fifth Economic Bust!");
+   set_base_rate(RED, "wealth", 300);
+   set_base_rate(BLUE, "wealth", 300);
+   set_base_rate(GREEN, "wealth", 300);
+   set_base_rate(YELLOW, "wealth", 300);
+   set_base_rate(CYAN, "wealth", 300);
+   set_base_rate(ORANGE, "wealth", 300);
+   set_base_rate(PURPLE, "wealth", 300);
+   set_base_rate(PINK, "wealth", 300);
+
+   set_base_rate(RED, "timonium", 150);
+   set_base_rate(BLUE, "timonium", 150);
+   set_base_rate(GREEN, "timonium", 150);
+   set_base_rate(YELLOW, "timonium", 150);
+   set_base_rate(CYAN, "timonium", 150);
+   set_base_rate(ORANGE, "timonium", 150);
+   set_base_rate(PURPLE, "timonium", 150);
+   set_base_rate(PINK, "timonium", 150);
+  }
+  
+  trigger CheckTime(time_sec() >= 50)
+      {
+          for (int i = 0; i < num_players(); i++)
+          {
+              if (num_units(get_leader(i)) < 2)
+              {
+                defeat(get_leader(i));
+             }
+          }
+      }
+}
+
+int game_callback on_leader_tribute(Leader giving_leader, Leader receiving_leader, GoodType good_type)
+{
+  if (good_type == "Timonium")
+  {
+    give_good(receiving_leader, "Timonium", 50);
+  }
+  else if (good_type == "Wealth")
+  {
+    give_good(receiving_leader, "Wealth", 50);
+  }
+  return -1;
+}
+
+void game_callback on_unit_killed (Unit the_unit) {
+
+  Leader the_leader = get_unit_leader(the_unit); 
+
+  Leader damage_leader = unit_get_damage_leader(the_unit);
+
+  UnitType unit_type = get_unit_type(the_unit);
+ 
+  Object the_object = get_unit_object(the_unit);
+
+   if (unit_type == "Giacomo, Inventor of Miana" || unit_type == "Giacomo, Inventor of Miana L2" || unit_type == "Giacomo, Inventor of Miana L3" || unit_type == "Giacomo, Inventor of Miana L4" ||  unit_type == "Giacomo, Inventor of Miana L5" || unit_type == "The Doge, Alessadri of Venucci" || unit_type == "The Doge, Alessadri of Venucci L2" || unit_type == "The Doge, Alessadri of Venucci L3" || unit_type == "The Doge, Alessadri of Venucci L4" || unit_type == "The Doge, Alessadri of Venucci L5" || unit_type == "Czin, God of Death" || unit_type == "Czin, God of Death L2" || unit_type == "Czin, God of Death L3" || unit_type == "Czin, God of Death L4" || unit_type == "Czin, God of Death L5" || unit_type == "Xil, the Sun God" || unit_type == "Xil, the Sun God L2" || unit_type == "Xil, the Sun God L3" || unit_type == "Xil, the Sun God L4" || unit_type == "Xil, the Sun God L5" || unit_type == "Dakhla, the Sand Warden" || unit_type == "Dakhla, the Sand Warden L2" || unit_type == "Dakhla, the Sand Warden L3" || unit_type == "Dakhla, the Sand Warden L4" || unit_type == "Dakhla, the Sand Warden L5" || unit_type == "Sawu, the Dark Alim" || unit_type == "Sawu, the Dark Alim L2" || unit_type == "Sawu, the Dark Alim L3" || unit_type == "Sawu, the Dark Alim L4" || unit_type == "Sawu, the Dark Alim L5" || unit_type == "Marwan, the Dark Alim" || unit_type == "Marwan, the Dark Alim L2" || unit_type == "Marwan, the Dark Alim L3" || unit_type == "Marwan, the Dark Alim L4" || unit_type == "Marwan, the Dark Alim L5" || unit_type == "Yontash, the Spiritchief" || unit_type == "Yontash, the Spiritchief L2" || unit_type == "Yontash, the Spiritchief L3" || unit_type == "Yontash, the Spiritchief L4" || unit_type == "Yontash, the Spiritchief L5" || unit_type == "Distruzio, the Wayward Prodigy" || unit_type == "Distruzio, the Wayward Prodigy L2" || unit_type == "Distruzio, the Wayward Prodigy L3" || unit_type == "Distruzio, the Wayward Prodigy L4" || unit_type == "Distruzio, the Wayward Prodigy L5" || unit_type == "Lenora, Pirata Princess" || unit_type == "Lenora, Pirata Princess L2" || unit_type == "Lenora, Pirata Princess L3" || unit_type == "Lenora, Pirata Princess L4" || unit_type == "Lenora, Pirata Princess L5" || unit_type == "Lenora Boosted" || unit_type == "Lenora Boosted 2" || unit_type == "Lenora Boosted 3" || unit_type == "Lenora Boosted 4" || unit_type == "Lenora Boosted 5" || unit_type == "Shok, Goddess of storm" || unit_type == "Shok, Goddess of storm L2" || unit_type == "Shok, Goddess of storm L3" || unit_type == "Shok, Goddess of storm L4" || unit_type == "Shok, Goddess of storm L5" || unit_type == "Damanhur, the Desert Flame" || unit_type == "Damanhur, the Desert Flame L2" || unit_type == "Damanhur, the Desert Flame L3" || unit_type == "Damanhur, the Desert Flame L4" || unit_type == "Damanhur, the Desert Flame L5" || unit_type == "Damanhur, the Desert Flame upgrade" || unit_type == "Damanhur, the Desert Flame upgrade 3" || unit_type == "Damanhur, the Desert Flame upgrade 4" || unit_type == "Damanhur, the Desert Flame upgrade 5" || unit_type == "Adromolek, the Dark Prince" || unit_type == "Adromolek, the Dark Prince L2" || unit_type == "Adromolek, the Dark Prince L3" || unit_type == "Adromolek, the Dark Prince L4" || unit_type == "Adromolek, the Dark Prince L5" || unit_type == "Pulitore, the Chicken Rider" || unit_type == "Pulitore, the Chicken Rider L2" || unit_type == "Pulitore, the Chicken Rider L3" || unit_type == "Pulitore, the Chicken Rider L4" || unit_type == "Pulitore, the Chicken Rider L5" ) {
+
+    bubble_text_cent_screen("Given 1 Prototype to revive a Hero!");
+    give_good(the_leader, "Prototypes", 1);
+    }
+
+    if (is_type(get_unit_type(the_unit), "Giacomo, Inventor of Miana")) {
+
+    add_chat_with_voice("... There are too many!  Where is Carlini when I need him?", the_leader, "Giacomo, Inventor of Miana", "Giacomo, Inventor of Miana", "giacomo_death_phrase");
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "The Doge, Alessadri of Venucci")) {
+
+    add_chat_with_voice("wtf", the_leader, "The Doge, Alessadri of Venucci", "The Doge, Alessadri of Venucci", "doge_death_phrase");
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Lenora, Pirata Princess")) {
+
+    add_chat_with_voice("I never expected to end up here.", the_leader, "Lenora, Pirata Princess", "Lenora, Pirata Princess", "lenora_death_phrase");
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Lenora Boosted")) {
+
+    add_chat_with_voice("I never expected to end up here.", the_leader, "Lenora, Pirata Princess", "Lenora, Pirata Princess", "lenora_death_phrase");
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150);   
+    }
+
+    if (is_type(get_unit_type(the_unit), "Sawu, the Dark Alim")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Dakhla, the Sand Warden")) {
+
+    add_chat_with_voice("Aaaaaeeeeee! Splat!", the_leader, "Dakhla, the Sand Warden", "Dakhla, the Sand Warden", "sand_death_phrase");
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Damanhur, the Desert Flame")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150);  
+    }
+
+    if (is_type(get_unit_type(the_unit), "Damanhur Upgrade")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Marwan, the Dark Alim")) {
+
+    add_chat_with_voice("Whatever your purpose here, you will not succeed! Our master Sawu will destroy you first.", the_leader, "Memphis, the Dark Alin", "Marwan, the Dark Alim", "memphis_death_phrase");
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150);   
+    }
+
+    if (is_type(get_unit_type(the_unit), "Antonio, Sergeant of Miana")) {
+
+    add_chat_with_voice("I am ruined!", the_leader, "Antonio, Felignan Merchant", "Antonio, Sergeant of Miana", "merchant_death_phrase");
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Czin, God of Death")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150);    
+    }
+
+    if (is_type(get_unit_type(the_unit), "Xil, the Sun God")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150);  
+    }
+
+    if (is_type(get_unit_type(the_unit), "Shok, Goddess of storm")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Yontash, the Spiritchief")) {
+
+    add_chat_with_voice("I am amazed you persist.", the_leader, "Yontash, the Spiritchief", "Yontash, the Spiritchief", "yont_death_phrase");
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Distruzio, the Wayward Prodigy")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Adromolek, the Dark Prince")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150);  
+    }
+
+    if (is_type(get_unit_type(the_unit), "Pulitore, the Chicken Rider")) {
+
+      Text bubble_text_msg = Text("Enemy hero is dead! Here is some resources for your efforts!");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good(damage_leader, "Timonium", 150);   
+      give_good(damage_leader, "Wealth", 150); 
+    }
+
+    if (is_type(get_unit_type(the_unit), "Cuotl Caravan")) {
+
+      Text bubble_text_msg2 = Text("125 #ICON2 Wealth");
+      object_add_bubble_text(the_object, bubble_text_msg2);
+      give_good(damage_leader, "Wealth", 125); 
+    }
+
+  trigger(num_type(the_leader, "Marwan, the Dark Alim") > 0) {
+        add_chat_with_voice("I will not be stopped!", the_leader, "Memphis", "Marwan, the Dark Alim", "memphis_summon_phrase");
+      }
+
+}

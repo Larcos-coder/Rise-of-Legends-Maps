@@ -1,0 +1,536 @@
+//@ by FOXY
+
+BuildType Buildings[] = ["Vinci Musketeers 1", "Vinci Musketeers 2", "Vinci Musketeers 3", "Vinci Musketeers 4", "Vinci Clockworks 1", "Vinci Clockworks 2", "Vinci Clockworks 3", "Vinci Clockworks 4", "Vinci Spiders 1", "Vinci Spiders 2", "Vinci Spiders 3", "Vinci Spiders 4", "Vinci Juggernauts 1", "Vinci Juggernauts 2", "Vinci Juggernauts 3", "Vinci Soldiers 1", "Vinci Soldiers 2", "Vinci Soldiers 3", "Vinci Soldiers 4", "Vinci Dragoons 1", "Vinci Dragoons 2", "Vinci Dragoons 3", "Vinci Dragoons 4", "Vinci Knights 1", "Vinci Knights 2", "Vinci Knights 3", "Vinci Knights 4", "Vinci Cannons 1", "Vinci Cannons 2", "Vinci Cannons 3", "Alin Walkers 1", "Alin Walkers 2", "Alin Walkers 3", "Alin Walkers 4", "Alin Heartseekers 1", "Alin Heartseekers 2", "Alin Heartseekers 3", "Alin Heartseekers 4", "Alin Scorpions 1", "Alin Scorpions 2", "Alin Scorpions 3", "Alin Scorpions 4", "Alin Glass Heartseekers 1", "Alin Glass Heartseekers 2", "Alin Glass Heartseekers 3", "Alin Glass Heartseekers 4", "Alin Glass Scorpions 1", "Alin Glass Scorpions 2", "Alin Glass Scorpions 3", "Alin Glass Scorpions 4"]; // сюда вносишь тайпнемы своих зданий
+
+UnitType Units[] = ["Imperial Musketeer", "Imperial Musketeer", "Imperial Musketeer", "Imperial Musketeer", "Clockwork Man", "Clockwork Man", "Clockwork Man", "Clockwork Man", "Clockwork Spider", "Clockwork Spider", "Clockwork Spider", "Clockwork Spider", "Juggernaut", "Juggernaut", "Juggernaut", "Condottieri Soldier", "Condottieri Soldier", "Condottieri Soldier", "Condottieri Soldier", "Condottieri Dragoon", "Condottieri Dragoon", "Condottieri Dragoon", "Condottieri Dragoon", "Condottieri Knight", "Condottieri Knight", "Condottieri Knight", "Condottieri Knight", "Rocket Launcher", "Rocket Launcher", "Rocket Launcher", "Desert Walker", "Desert Walker", "Desert Walker", "Desert Walker", "Heartseeker", "Heartseeker", "Heartseeker", "Heartseeker", "Scorpion Rider", "Scorpion Rider", "Scorpion Rider", "Scorpion Rider", "Glass Heartseeker", "Glass Heartseeker", "Glass Heartseeker", "Glass Heartseeker", "Glass Scorpion", "Glass Scorpion", "Glass Scorpion", "Glass Scorpion"]; // сюда юнитов, соответственно твоим зданиям
+
+int CountSpawn[] = [1, 3, 7, 15, 1, 3, 7, 15, 1, 3, 7, 15, 1, 3, 7, 1, 3, 7, 15, 1, 3, 7, 15, 1, 3, 7, 15, 1, 3, 7, 1, 3, 7, 15, 1, 3, 7, 15, 1, 3, 7, 15, 1, 3, 7, 15, 1, 3, 7, 15]; // кол-во спавнящихся юнитов с одного здания
+
+int Count[]; // переделал
+
+int CountUnit[]; //кол-во юнитов каждого игрока
+
+int Wins[]; // кол-во побед
+
+int LastWins;
+
+Location Spawn[] = [ "spawn1", "spawn2", "spawn3", "spawn4", "spawn5", "spawn6", "spawn7", "spawn8" ]; // точка спавна, назови так, как у тебя на карте
+
+Location Battlefields[] = [ "1vs2", "3vs4", "5vs6", "7vs8" ]; // точки парных боев
+
+Location Target = "center"; // точка финального боя, в центре
+
+labels{
+    limit = 10000} // limit - ограничение на кол-во юнитов у одного игрока
+
+Unit curunit; //переменная юнита
+
+GoodType Wealth = "Wealth"; //Деньга
+int BaseRateWealth = 25;    //Базовая добыча
+int AddWealth = 25;         //Прирост после победы
+
+GoodType Timonium = "Timonium"; //Тимоний
+int BaseRateTimonium = 25;      //Базовая добыча
+int AddTimonium = 25;           //Прирост после победы
+
+int count_wave = 0; // можешь удалить, это я считал и выводил срабатывания триггера
+
+int timer_respawn = 45; //время (в секундах) перезапуска таймера
+int Time = 0;           //время для отсчета таймера, не трогать
+String Time_s;          //строка текущего времени
+String Time_total;      //строка времени перезапуска, равна timer_respawn в форматированном виде
+
+Bool enable_near_enemy_fn = false; //включение/выключение функции поиска и атаки на ближайшего юнита
+
+void function sf_halfbattle(Leader led1, Leader led2);     //функция 1 на 1, перенаправляющая войска в центр
+Void function sf_unit_attack_to_nearest_unit(Unit crunit); //функция определения ближайшего фрага и атака
+String function sf_convert_to_clock(int time_in_seconds);  //конвертер секунд в форматированное время
+
+void game_callback on_game_frame()
+{
+    reveal_region("arena1", "1");
+    reveal_region("arena2", "1");
+    reveal_region("arena3", "1");
+    reveal_region("arena1", "2");
+    reveal_region("arena2", "2");
+    reveal_region("arena3", "2");
+    reveal_region("arena1", "3");
+    reveal_region("arena2", "3");
+    reveal_region("arena3", "3");
+    reveal_region("arena1", "4");
+    reveal_region("arena2", "4");
+    reveal_region("arena3", "4");
+    reveal_region("arena1", "5");
+    reveal_region("arena2", "5");
+    reveal_region("arena3", "5");
+    reveal_region("arena1", "6");
+    reveal_region("arena2", "6");
+    reveal_region("arena3", "6");
+    reveal_region("arena1", "7");
+    reveal_region("arena2", "7");
+    reveal_region("arena3", "7");
+    reveal_region("arena1", "8");
+    reveal_region("arena2", "8");
+    reveal_region("arena3", "8");
+
+    // set_environment_duration("Desert_Final_night", 1, 90); // ночь выглядит прикольно
+
+    run_once
+    {
+        diplo_disable("1");
+        diplo_disable("2");
+        diplo_disable("3");
+        diplo_disable("4");
+        diplo_disable("5");
+        diplo_disable("6");
+        diplo_disable("7");
+        diplo_disable("8");
+        research_disable("1");
+        research_disable("2");
+        research_disable("3");
+        research_disable("4");
+        research_disable("5");
+        research_disable("6");
+        research_disable("7");
+        research_disable("8");
+
+        create_building("1", "StartBuilding", "start1");
+        create_building("2", "StartBuilding", "start2");
+        create_building("3", "StartBuilding", "start3");
+        create_building("4", "StartBuilding", "start4");
+        create_building("5", "StartBuilding", "start5");
+        create_building("6", "StartBuilding", "start6");
+        create_building("7", "StartBuilding", "start7");
+        create_building("8", "StartBuilding", "start8");
+
+        show_script_window("info_win");            //включаю окно с инфой
+        for (int i = 0; i < Buildings.length; i++) //заполняю массив нулями
+        {
+            add(Count, 0);
+        }
+        for (int l = 0; l < num_players(); l++) //выставляю добычу в 0 у всех игроков, заполняю массив нулями
+        {
+            add(CountUnit, 0);
+            add(Wins, 0);
+            set_base_rate(get_leader(l), Wealth, 0);
+            set_base_rate(get_leader(l), Timonium, -10);
+        }
+
+        set_timer("spawn", timer_respawn); // запуск таймера
+        set_timer("spawn_timer", 1);       //секундный таймер для времени
+        disable_all_triggers();            //выключаю все триггеры
+        enable_trigger("start");           //включаю основной триггер
+    }
+
+    if (enable_near_enemy_fn)
+    {
+        // bubble_text_cent_screen("work");
+        for (int u = 0; u < num_players(); u++)
+        {
+            UnitGroup allunit = find_unit(get_leader(u), "$ALL$");
+            Unit the_unit;
+            for (int scan = 0; scan < unit_group_length(allunit); scan++)
+            {
+                the_unit = unit_at_index(allunit, scan);
+                if (is_unit_idle(the_unit))
+                    sf_unit_attack_to_nearest_unit(the_unit);
+            }
+            // clear_unit_group(allunit);
+        }
+    }
+
+    if (timer_expired("spawn_timer"))
+    {
+        Unit the_unit;
+        UnitGroup allunit;
+        Time++;
+        Time_s = sf_convert_to_clock(Time);
+        Time_total = sf_convert_to_clock(timer_respawn);
+        // bubble_text_cent_screen(Text(Time_s));
+
+        for (int l = 0; l < num_players(); l++)
+        {
+            allunit = find_unit(get_leader(l), "$ALL$");
+            for (int scan = 0; scan < unit_group_length(allunit); scan++)
+            {
+                the_unit = unit_at_index(allunit, scan);
+                unit_clear_orders(the_unit);
+                kill_unit(the_unit);
+            }
+            // clear_unit_group(allunit);
+        }
+        set_timer("spawn_timer", 1);
+    }
+
+    trigger start(timer_expired("spawn")) // срабатывание таймера
+    {
+
+        stop_timer("spawn_timer");
+        enable_all_triggers();
+        disable_trigger("start");
+        Time = 0;
+        Build the_build;
+        BuildGroup allbuild;
+
+        for (int l = 0; l < num_players(); l++)
+        {
+            allbuild = find_building(get_leader(l), "$ALL$");
+            for (int scan = 0; scan < build_group_length(allbuild); scan++)
+            {
+                the_build = building_at_index(allbuild, scan);
+                give_object_buff(the_build, the_build, "Plot Object", 360);
+            }
+            // clear_build_group(allbuild);
+        }
+
+        count_wave++;                                                            // можешь удалить, это я считал и выводил срабатывания триггера
+        bubble_text_cent_screen(Text("Trigger start v2. Wave - " + count_wave)); // можешь удалить, это я считал и выводил срабатывания триггера
+        for (int player = 0; player < num_players(); player++)
+        {
+            for (int i = 0; i < Buildings.length; i++)
+            {
+                Count[i] = num_type(get_leader(player), Buildings[i]);
+                for (int j = 0; j < Count[i]; j++)
+                {
+                    for (int k = 0; k < CountSpawn[i]; k++)
+                    {
+                        if (CountUnit[player] >= limit)
+                            break;
+                        curunit = create_unit(get_leader(player), Units[i], Spawn[player]);
+                        // unit_attack_to(curunit, Target);
+                        switch (player)
+                        {
+                        case 0:
+                        case 1:
+                            unit_attack_to(curunit, Battlefields[0]);
+                            break;
+                        case 2:
+                        case 3:
+                            unit_attack_to(curunit, Battlefields[1]);
+                            break;
+                        case 4:
+                        case 5:
+                            unit_attack_to(curunit, Battlefields[2]);
+                            break;
+                        case 6:
+                        case 7:
+                            unit_attack_to(curunit, Battlefields[3]);
+                            break;
+                        default:
+                            unit_attack_to(curunit, Battlefields[0]);
+                        }
+                        // unit_attack_to(curunit, Target);
+                        CountUnit[player] = num_units(get_leader(player));
+                    }
+                }
+            }
+        }
+        enable_near_enemy_fn = true;
+        bubble_text_cent_screen(Text("Trigger ends")); //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+
+    /////////////////////////////////////////////////////////////Парные бои
+    trigger t1vs2((num_units(get_leader(0)) > 0 && num_units(get_leader(1)) <= 0) || (num_units(get_leader(0)) <= 0 && num_units(get_leader(1)) > 0))
+    {
+        enable_near_enemy_fn = true;
+        sf_halfbattle(get_leader(0), get_leader(1));
+        bubble_text_cent_screen(Text("Trigger t1vs2")); //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+
+    trigger t3vs4((num_units(get_leader(2)) > 0 && num_units(get_leader(3)) <= 0) || (num_units(get_leader(2)) <= 0 && num_units(get_leader(3)) > 0))
+    {
+        enable_near_enemy_fn = true;
+        sf_halfbattle(get_leader(2), get_leader(3));
+        bubble_text_cent_screen(Text("Trigger t3vs4")); //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+
+    trigger t5vs6((num_units(get_leader(4)) > 0 && num_units(get_leader(5)) <= 0) || (num_units(get_leader(4)) <= 0 && num_units(get_leader(5)) > 0))
+    {
+        enable_near_enemy_fn = true;
+        sf_halfbattle(get_leader(4), get_leader(5));
+        bubble_text_cent_screen(Text("Trigger t5vs6")); //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+
+    trigger t7vs8((num_units(get_leader(6)) > 0 && num_units(get_leader(7)) <= 0) || (num_units(get_leader(6)) <= 0 && num_units(get_leader(7)) > 0))
+    {
+        enable_near_enemy_fn = true;
+        sf_halfbattle(get_leader(6), get_leader(7));
+        bubble_text_cent_screen(Text("Trigger t7vs8")); //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+    //////////////////////////////////////////////Финальный бой и убийство выживших
+    trigger final((num_units(get_leader(0)) > 0 && num_units(get_leader(1)) <= 0 && num_units(get_leader(2)) <= 0 && num_units(get_leader(3)) <= 0 && num_units(get_leader(4)) <= 0 && num_units(get_leader(5)) <= 0 && num_units(get_leader(6)) <= 0 && num_units(get_leader(7)) <= 0) ||
+                  (num_units(get_leader(0)) <= 0 && num_units(get_leader(1)) >= 0 && num_units(get_leader(2)) <= 0 && num_units(get_leader(3)) <= 0 && num_units(get_leader(4)) <= 0 && num_units(get_leader(5)) <= 0 && num_units(get_leader(6)) <= 0 && num_units(get_leader(7)) <= 0) ||
+                  (num_units(get_leader(0)) <= 0 && num_units(get_leader(1)) <= 0 && num_units(get_leader(2)) > 0 && num_units(get_leader(3)) <= 0 && num_units(get_leader(4)) <= 0 && num_units(get_leader(5)) <= 0 && num_units(get_leader(6)) <= 0 && num_units(get_leader(7)) <= 0) ||
+                  (num_units(get_leader(0)) <= 0 && num_units(get_leader(1)) <= 0 && num_units(get_leader(2)) <= 0 && num_units(get_leader(3)) > 0 && num_units(get_leader(4)) <= 0 && num_units(get_leader(5)) <= 0 && num_units(get_leader(6)) <= 0 && num_units(get_leader(7)) <= 0) ||
+                  (num_units(get_leader(0)) <= 0 && num_units(get_leader(1)) <= 0 && num_units(get_leader(2)) <= 0 && num_units(get_leader(3)) <= 0 && num_units(get_leader(4)) > 0 && num_units(get_leader(5)) <= 0 && num_units(get_leader(6)) <= 0 && num_units(get_leader(7)) <= 0) ||
+                  (num_units(get_leader(0)) <= 0 && num_units(get_leader(1)) <= 0 && num_units(get_leader(2)) <= 0 && num_units(get_leader(3)) <= 0 && num_units(get_leader(4)) <= 0 && num_units(get_leader(5)) > 0 && num_units(get_leader(6)) <= 0 && num_units(get_leader(7)) <= 0) ||
+                  (num_units(get_leader(0)) <= 0 && num_units(get_leader(1)) <= 0 && num_units(get_leader(2)) <= 0 && num_units(get_leader(3)) <= 0 && num_units(get_leader(4)) <= 0 && num_units(get_leader(5)) <= 0 && num_units(get_leader(6)) > 0 && num_units(get_leader(7)) <= 0) ||
+                  (num_units(get_leader(0)) <= 0 && num_units(get_leader(1)) <= 0 && num_units(get_leader(2)) <= 0 && num_units(get_leader(3)) <= 0 && num_units(get_leader(4)) <= 0 && num_units(get_leader(5)) <= 0 && num_units(get_leader(6)) <= 0 && num_units(get_leader(7)) > 0))
+    {
+        if (num_units(get_leader(0)) != 0)
+        {
+            Wins[0]++;
+            LastWins = 0;
+
+        }
+        else if (num_units(get_leader(1)) != 0)
+        {
+            Wins[1]++;
+            LastWins = 1;
+
+        }
+        else if (num_units(get_leader(2)) != 0)
+        {
+            Wins[2]++;
+            LastWins = 2;
+
+        }
+        else if (num_units(get_leader(3)) != 0)
+        {
+            Wins[3]++;
+            LastWins = 3;
+
+        }
+        else if (num_units(get_leader(4)) != 0)
+        {
+            Wins[4]++;
+            LastWins = 4;
+
+        }
+        else if (num_units(get_leader(5)) != 0)
+        {
+            Wins[5]++;
+            LastWins = 5;
+
+        }
+        else if (num_units(get_leader(6)) != 0)
+        {
+            Wins[6]++;
+            LastWins = 6;
+
+        }
+        else if (num_units(get_leader(7)) != 0)
+        {
+            Wins[7]++;
+            LastWins = 7;
+
+        }
+
+        Unit the_unit;
+        UnitGroup allunit;
+
+        BaseRateWealth += AddWealth;
+        BaseRateTimonium += AddTimonium;
+
+        for (int l = 0; l < num_players(); l++)
+        {
+            allunit = find_unit(get_leader(l), "$ALL$");
+            for (int scan = 0; scan < unit_group_length(allunit); scan++)
+            {
+                the_unit = unit_at_index(allunit, scan);
+                unit_clear_orders(the_unit);
+                // remove_unit(the_unit);
+                kill_unit(the_unit);
+                // kill_unit_group(allunit);
+            }
+
+            give_good(get_leader(l), Wealth, BaseRateWealth);     //добавление прирост
+            give_good(get_leader(l), Timonium, BaseRateTimonium); //добавление прироста
+            give_good(get_leader(l), "Prototypes", 1);
+            // clear_unit_group(allunit);
+        }
+
+        bubble_text_cent_screen(Text("Timer start")); //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        enable_trigger("start");
+        set_timer("spawn_timer", 1);
+        set_timer("spawn", timer_respawn);
+        enable_near_enemy_fn = false;
+    }
+}
+
+void function sf_halfbattle(Leader led1, Leader led2)
+{
+    UnitGroup allunit;
+    Unit the_unit;
+    if (num_units(led1) > 0)
+    {
+        allunit = find_unit(led1, "$ALL$");
+    }
+    else
+    {
+        allunit = find_unit(led2, "$ALL$");
+    }
+    for (int scan = 0; scan < unit_group_length(allunit); scan++)
+    {
+        the_unit = unit_at_index(allunit, scan);
+        unit_clear_orders(the_unit);
+        unit_attack_to(the_unit, Target);
+    }
+    // clear_unit_group(allunit);
+}
+/////////////////////////////////////////UI////////////////////////////////////////////
+void ui_callback on_show(string window_id)
+{
+    if (window_id == "info_win")
+    {
+        // bubble_text_cent_screen(Text(window_get_height()));
+        // window_set_height((25 * num_players()) + 70);
+    }
+}
+
+text ui_callback on_label_set_text_id(string window, string label_id, int id_num, text text_msg)
+{
+    if (window == "info_win")
+    {
+        if (id_num <= num_players())
+            switch (label_id)
+            {
+            case "time":
+
+                break;
+
+            case "icons":
+                string icon;
+                if (id_num == 1)
+                    icon = "#ICON135";
+                else if (id_num == 2)
+                    icon = "#ICON70";
+                else if (id_num == 3)
+                    icon = "#ICON47";
+                return Text(parse(text_msg, Text(icon)));
+                break;
+            case "wins":
+                return Text(parse(text_msg, Text(Wins[id_num - 1])));
+                break;
+
+            case "lastwins":
+                if (count_wave != 0)
+                {
+                    set_label_color_to_team_color(window, label_id, get_leader(LastWins));
+                    return Text(parse(text_msg, Text(get_leader_name(get_leader(LastWins)))));
+                }
+                break;
+
+            case "kills":
+
+                return Text(parse(text_msg, Text(num_kills(get_leader(id_num - 1)))));
+                break;
+            case "units":
+
+                return Text(parse(text_msg, Text(num_units(get_leader(id_num - 1)))));
+                break;
+
+            case "leader1":
+            case "leader2":
+            case "leader3":
+            case "leader4":
+            case "leader5":
+            case "leader6":
+            case "leader7":
+            case "leader8":
+
+                //#ICON47
+                String display;
+                switch (id_num)
+                {
+                case 1:
+                    set_label_color_to_team_color(window, label_id, get_leader(0));
+                    display = get_leader_name(get_leader(0));
+                    break;
+                case 2:
+                    set_label_color_to_team_color(window, label_id, get_leader(1));
+                    display = get_leader_name(get_leader(1));
+                    break;
+                case 3:
+                    set_label_color_to_team_color(window, label_id, get_leader(2));
+                    display = get_leader_name(get_leader(2));
+                    break;
+                case 4:
+                    set_label_color_to_team_color(window, label_id, get_leader(3));
+                    display = get_leader_name(get_leader(3));
+                    break;
+                case 5:
+                    set_label_color_to_team_color(window, label_id, get_leader(4));
+                    display = get_leader_name(get_leader(4));
+                    break;
+                case 6:
+                    set_label_color_to_team_color(window, label_id, get_leader(5));
+                    display = get_leader_name(get_leader(5));
+                    break;
+                case 7:
+                    set_label_color_to_team_color(window, label_id, get_leader(6));
+                    display = get_leader_name(get_leader(6));
+                    break;
+                case 8:
+                    set_label_color_to_team_color(window, label_id, get_leader(7));
+                    display = get_leader_name(get_leader(7));
+                    break;
+
+                default:
+                    break;
+                }
+                return Text(display);
+                break;
+
+            case "header":
+                if (Time)
+                    return Text(parse(text_msg, Text(Time_s), Text(Time_total)));
+                else
+                    return Text("Round " + count_wave);
+                break;
+
+            default:
+                break;
+            }
+    }
+}
+String function sf_convert_to_clock(int time_in_seconds)
+{
+    String clock;
+    int seconds;
+    int minutes;
+
+    minutes = time_in_seconds / 60;
+    seconds = time_in_seconds % 60;
+
+    if (seconds > 9)
+    {
+        clock = parse("$s0:$s1", minutes, seconds);
+    }
+    else
+    {
+        clock = parse("$s0:0$s1", minutes, seconds);
+    }
+    return clock;
+}
+
+Void function sf_unit_attack_to_nearest_unit(unit crunit)
+{
+    Leader curleader = get_unit_leader(crunit);
+    Location curlocation = unit_location(crunit);
+    Unit the_unit;
+    Unit target_unit;
+    UnitGroup allunit;
+
+    int min_dist = 1000, dist;
+
+    for (int l = 0; l < num_players(); l++)
+    {
+        if (get_leader(l) != curleader)
+        {
+            allunit = find_unit(get_leader(l), "$ALL$");
+            for (int scan = 0; scan < unit_group_length(allunit); scan++)
+            {
+                the_unit = unit_at_index(allunit, scan);
+                dist = locations_distance(curlocation, unit_location(the_unit));
+                if (dist <= min_dist)
+                {
+                    min_dist = dist;
+                    target_unit = the_unit;
+                }
+            }
+            // clear_unit_group(allunit);
+        }
+    }
+    unit_attack_to_unit(crunit, target_unit);
+}

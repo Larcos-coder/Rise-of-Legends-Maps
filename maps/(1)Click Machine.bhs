@@ -1,0 +1,574 @@
+//===================== Made by Larcos ======================
+int function sf_give_health(Unit the_unit);
+void function sf_gold_for_kills(Unit the_unit);
+void function sf_damage_for_unit(int Damage, Unit the_unit);
+void function sf_CastleHP(int CastleHealth);
+void function sf_Speaker_Said(int Dialogue_Number);
+bool function sf_unit_in_array(Unit the_unit, UnitType[] unit_array);
+UnitType function sf_give_spawn_unit(UnitType[] unit_array);
+UnitType[] function sf_Random_unit(int[] unit_cost);
+
+int x_coord, y_coord, MouseDamage; 
+float my_rand;
+Location spawn_loc, center_loc, cast_loc;
+
+UnitType[] Swords = ["First1", "First2", "First3", "First4", "First5", "First6", "First7", "First8", "First9", "First10", "First11", "First12", "First13", "First14", "First15", "First16", "First17", "First18", "First19", "First20", "First21", "First22", "First23", "First24", "First25", "First26", "First27", "First28", "First29", "First30"];
+UnitType[] Musketeers = ["Musket1", "Musket2", "Musket3", "Musket4", "Musket5", "Musket6", "Musket7", "Musket8", "Musket9", "Musket10", "Musket11", "Musket12", "Musket13", "Musket14", "Musket15", "Musket16", "Musket17", "Musket18", "Musket19", "Musket20", "Musket21", "Musket22", "Musket23", "Musket24", "Musket25", "Musket26", "Musket27", "Musket28", "Musket29", "Musket30"];
+UnitType[] Doges = ["Second1", "Second2", "Second3", "Second4", "Second5", "Second6", "Second7", "Second8", "Second9", "Second10", "Second11", "Second12", "Second13", "Second14", "Second15", "Second16", "Second17", "Second18", "Second19", "Second20", "Second21", "Second22", "Second23", "Second24", "Second25", "Second26", "Second27", "Second28", "Second29", "Second30"];
+UnitType[] Horses = ["Third1", "Third2", "Third3", "Third4", "Third5", "Third6", "Third7", "Third8", "Third9", "Third10", "Third11", "Third12", "Third13", "Third14", "Third15", "Third16", "Third17", "Third18", "Third19", "Third20"];
+UnitType[] Walkers = ["Walker1", "Walker2", "Walker3", "Walker4", "Walker5", "Walker6", "Walker7", "Walker8", "Walker9", "Walker10", "Walker11", "Walker12", "Walker13", "Walker14", "Walker15", "Walker16", "Walker17", "Walker18", "Walker19", "Walker20"];
+UnitType[] Tanks = ["Tank1", "Tank2", "Tank3", "Tank4", "Tank5", "Tank6", "Tank7", "Tank8", "Tank9", "Tank10", "Tank11", "Tank12", "Tank13", "Tank14", "Tank15", "Tank16", "Tank17", "Tank18", "Tank19", "Tank20"];
+UnitType[] Scouts = ["Scout1", "Scout2", "Scout3", "Scout4", "Scout5", "Scout6", "Scout7", "Scout8", "Scout9", "Scout10", "Scout11", "Scout12", "Scout13", "Scout14", "Scout15", "Scout16", "Scout17", "Scout18", "Scout19", "Scout20"];
+UnitType[] Pirats = ["Pirata1", "Pirata2", "Pirata3", "Pirata4", "Pirata5", "Pirata6", "Pirata7", "Pirata8", "Pirata9", "Pirata10", "Pirata11", "Pirata12", "Pirata13", "Pirata14", "Pirata15", "Pirata16", "Pirata17", "Pirata18", "Pirata19", "Pirata20"];
+UnitType[] Zeppelins = ["Zeppelin1", "Zeppelin2", "Zeppelin3", "Zeppelin4", "Zeppelin5", "Zeppelin6", "Zeppelin7", "Zeppelin8", "Zeppelin9", "Zeppelin10", "Zeppelin11", "Zeppelin12", "Zeppelin13", "Zeppelin14", "Zeppelin15", "Zeppelin16", "Zeppelin17", "Zeppelin18", "Zeppelin19", "Zeppelin20"];
+UnitType[] Dirigibles = ["Dirigible1", "Dirigible2", "Dirigible3", "Dirigible4", "Dirigible5", "Dirigible6", "Dirigible7", "Dirigible8", "Dirigible9", "Dirigible10", "Dirigible11", "Dirigible12", "Dirigible13", "Dirigible14", "Dirigible15", "Dirigible16", "Dirigible17", "Dirigible18", "Dirigible19", "Dirigible20"];
+UnitType[] Spiders = ["Spider1", "Spider2", "Spider3", "Spider4", "Spider5", "Spider6", "Spider7", "Spider8", "Spider9", "Spider10", "Spider11", "Spider12", "Spider13", "Spider14", "Spider15", "Spider16", "Spider17", "Spider18", "Spider19", "Spider20"];
+UnitType[] Demolitions = ["Demolition1", "Demolition2", "Demolition3", "Demolition4", "Demolition5", "Demolition6", "Demolition7", "Demolition8", "Demolition9", "Demolition10", "Demolition11", "Demolition12", "Demolition13", "Demolition14", "Demolition15", "Demolition16", "Demolition17", "Demolition18", "Demolition19", "Demolition20"];
+UnitType[] Caravans = ["Caravan1", "Caravan2", "Caravan3", "Caravan4", "Caravan5", "Caravan6", "Caravan7", "Caravan8", "Caravan9", "Caravan10"]; 
+
+void game_callback on_game_frame(){
+static int StandartTimeSpeed = 2;
+int scan, distance;
+static float time = 240;
+static int trigTime;
+int Spawn_Period = 1;
+static float freq = 1;
+Unit the_unit;
+static bool Night = 0;
+static int[] Unit_cost = [100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+static int[] Close_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+//Check function sf_Random_unit
+
+  run_once{
+    MouseDamage = 1;
+    center_loc = create_location(92,60);
+    set_timer("Spawn", 1);
+    set_timer("Dialogue", 2);
+    set_timer("EndTime", 1920);
+    GLOBALS["health"] = 100;
+    GLOBALS["MassKill"] = 0;
+    diplo_disable("1");
+    set_timer("Period", 1);
+    set_timer("Night", 1200);
+    set_timer("Victory", 2100);
+    remove_all_cooldowns("2");
+    remove_all_cooldowns("1");
+    set_commerce_cap("1",1000);
+    set_population_cap("1",300);
+    speed_control_disable();
+    set_timer("Every Second", 1);
+    set_base_rate("1", "timonium", -10);
+  }
+  if(timer_expired("Night")){ 
+    set_environment_duration("Desert_Final_night", -1, 300);
+    Night = 1;
+  }
+  if(timer_expired("Victory")){ 
+    victory("1");
+  }
+  if(timer_expired("Period")){
+    if(freq < 10)freq+=0.0025;
+    Spawn_Period = (int)(-2*sin(time*freq) + 3);
+    set_timer("Period", 1);
+    trigger LongLowTime(Spawn_Period == 1){
+      set_timer("Period", (int)(time/8));
+    }
+    for(scan = 0; scan < unit_group_length("Spider Group"); scan++){
+      if(is_unit_in_region(unit_at_index("Spider Group", scan), "PreCastle")){
+        unit_attack_to_along_path(unit_at_index("Spider Group", scan), "Spiders Path");
+      }
+    }
+  }
+  if(Spawn_Period == 4)enable_trigger(LongLowTime);
+
+  if(timer_expired("Every Second")){
+    time++;
+    trigTime = (int)(time - 240);
+    if(trigTime > 20 && Unit_cost[1] < 100 && Close_array[1] == 0 && trigTime%3 == 0){
+      Unit_cost[1]++;
+      Unit_cost[0]--;
+      if(Unit_cost[1] == 100)Close_array[1] = 1;
+    }
+    if(trigTime > 50 && Unit_cost[3] < 10 && Close_array[3] == 0 && trigTime%10 == 0){
+      Unit_cost[3]++;
+      if(Unit_cost[3] == 10)Close_array[3] = 1;
+    }
+    if(trigTime > 320 && Unit_cost[2] < 100 && Close_array[2] == 0 && trigTime%2 == 0){
+      Unit_cost[2]++;
+      Unit_cost[1]--;
+      if(Unit_cost[2] == 100)Close_array[2] = 1;
+    }
+    if(trigTime > 400 && Unit_cost[4] < 5 && Close_array[4] == 0 && trigTime%20 == 0){
+      Unit_cost[4]++;
+      if(Unit_cost[4] == 5)Close_array[4] = 1;
+    }
+    if(trigTime > 650 && Unit_cost[9] < 15 && Close_array[9] == 0 && trigTime%30 == 0){
+      Unit_cost[9]++;
+      Unit_cost[2] -= 2;
+      if(Unit_cost[9] == 5)Close_array[9] = 1;
+    }
+    if(trigTime > 700 && Unit_cost[7] < 10 && Close_array[7] == 0 && trigTime%30 == 0){
+      Unit_cost[7]++;
+      Unit_cost[3]--;
+      Unit_cost[2] -= 2;
+      if(Unit_cost[7] == 10)Close_array[7] = 1;
+    }
+    if(trigTime > 550 && Unit_cost[12] < 5 && Close_array[12] == 0 && trigTime%60 == 0){
+      Unit_cost[12]++;
+      if(Unit_cost[12] == 5)Close_array[12] = 1;
+    }
+
+    if(trigTime > 800 && Unit_cost[6] < 10 && Close_array[6] == 0 && trigTime%30 == 0){
+      Unit_cost[6]++;
+      Unit_cost[2] -= 2;
+      if(Unit_cost[6] == 10)Close_array[6] = 1;
+    }
+    if(trigTime > 900 && Unit_cost[8] < 5 && Close_array[8] == 0 && trigTime%30 == 0){
+      Unit_cost[8]++;
+      if(Unit_cost[8] == 5)Close_array[8] = 1;
+    }
+    if(trigTime > 1200 && Unit_cost[5] < 5 && Close_array[5] == 0 && trigTime%30 == 0){
+      Unit_cost[5]++;
+      if(Unit_cost[5] == 5)Close_array[5] = 1;
+    }
+    if(trigTime > 1300 && Unit_cost[10] < 10 && Close_array[10] == 0 && trigTime%20 == 0){
+      Unit_cost[10]++;
+      if(Unit_cost[10] == 5)Close_array[10] = 1;
+    }
+    if(trigTime > 1400 && Unit_cost[11] < 50 && trigTime%50 == 0){
+      Unit_cost[11]++;
+    }
+    set_timer("Every Second", 1);
+  }
+
+  if(timer_expired("not_gold")){
+    GLOBALS["MassKill"] = 0;
+  }
+
+  trigger(has_tech("1", "Evocation 1")){
+    MouseDamage++;   
+  }
+  trigger(has_tech("1", "Evocation 2")){
+    MouseDamage++;   
+  }
+  trigger(has_tech("1", "Evocation 3")){
+    MouseDamage++;   
+  }
+  trigger(has_tech("1", "Spirit Binding 1")){
+    set_base_rate("1", "timonium", -30);
+  }
+  trigger(has_tech("1", "Spirit Binding 2")){
+    set_base_rate("1", "Wealth", 5);
+    set_base_rate("1", "timonium", -40);
+  }
+  trigger(has_tech("1", "Spirit Binding 3")){
+    set_base_rate("1", "Wealth", 20);
+    set_base_rate("1", "timonium", -70);
+  }
+  trigger(has_tech("1", "Spirit Binding 4")){
+    set_base_rate("1", "Wealth", 55);
+    set_base_rate("1", "timonium", -135);
+  }
+  trigger(has_tech("1", "Prosperity 1 Alim")){
+   sf_CastleHP(2000);
+  }
+  trigger(has_tech("1", "Prosperity 2 Alim")){
+   sf_CastleHP(3000);
+  }
+  trigger(has_tech("1", "Prosperity 3 Alim")){
+   sf_CastleHP(4000);
+  }
+  trigger(has_tech("1", "Prosperity 4 Alim")){
+   sf_CastleHP(5000);
+  }
+
+//==================== Spawn ===========================
+
+  if(timer_expired("Spawn")){
+    my_rand = (rand_real() + 0.5)*acos(-1);
+    x_coord = (int)(60 + 55*cos(my_rand));
+    y_coord = (int)(60 + 55*sin(my_rand));
+    spawn_loc = create_location(x_coord,y_coord);
+    fill_unit_group("2", sf_give_spawn_unit(sf_Random_unit(Unit_cost)), "Main Group", 1, spawn_loc);
+    if(sf_unit_in_array(unit_at_index("Main Group", 0), Caravans)){      
+      unit_switch_teams("1", unit_at_index("Main Group", 0));
+      unit_remove_visible("1", unit_at_index("Main Group", 0));
+    }
+    if(sf_unit_in_array(unit_at_index("Main Group", 0), Spiders)){
+      distance = rand_int(15, 30);
+      x_coord = (int)(92 + distance*cos(my_rand));
+      y_coord = (int)(60 + distance*sin(my_rand));
+      cast_loc = create_location(x_coord,y_coord);
+      unit_cast_at_location("Spider Burrow", unit_at_index("Main Group", 0), cast_loc);
+      unit_group_attack_to_along_path("Main Group", "Main Path");
+      add_unit_to_group("Spider Group", unit_at_index("Main Group", 0));
+    }
+    else{
+      unit_group_attack_to_along_path("Main Group", "Main Path");
+    }
+    clear_unit_group("Main Group");
+    set_timer("Spawn", Spawn_Period);
+  }
+//================== Castle Damage ====================
+
+UnitGroup CastleAttackers = find_unit("2","");
+UnitGroup CaravansAttackers = find_unit("1","");
+static Build Castle = find_building("1", "Castle for win");
+static int TotalDamage = 0;
+  for(scan = 0; scan < unit_group_length(CaravansAttackers); scan++){
+    the_unit = unit_at_index(CaravansAttackers, scan);
+    if(!is_unit_in_region(the_unit, "Castle_region")){
+      continue;
+    }
+    else{
+      if(sf_unit_in_array(the_unit, Caravans) == 1){
+        if(object_health(Castle) != 100)set_object_health(Castle,object_health(Castle) + 1);
+        kill_unit(the_unit);
+      }
+    }
+  }
+  for(scan = 0; scan < unit_group_length(CastleAttackers); scan++){
+    the_unit = unit_at_index(CastleAttackers, scan);
+    if(!is_unit_in_region(the_unit, "Castle_region")){
+      continue;
+    }
+    else{
+      if(sf_unit_in_array(the_unit, Swords) == 1)TotalDamage++;
+      if(sf_unit_in_array(the_unit, Musketeers) == 1)TotalDamage+=2;
+      if(sf_unit_in_array(the_unit, Doges) == 1)TotalDamage+=3;
+      if(sf_unit_in_array(the_unit, Horses) == 1)TotalDamage+=5;
+      if(sf_unit_in_array(the_unit, Walkers) == 1)TotalDamage+=20;
+      if(sf_unit_in_array(the_unit, Tanks) == 1)TotalDamage+=50;
+      if(sf_unit_in_array(the_unit, Scouts) == 1)TotalDamage+=4;
+      if(sf_unit_in_array(the_unit, Pirats) == 1)TotalDamage+=8;
+      if(sf_unit_in_array(the_unit, Zeppelins) == 1)TotalDamage+=25;
+      if(sf_unit_in_array(the_unit, Dirigibles) == 1)TotalDamage+=22;
+      if(sf_unit_in_array(the_unit, Spiders) == 1)TotalDamage+=15;
+      if(sf_unit_in_array(the_unit, Demolitions) == 1)TotalDamage+=10;
+    }
+    kill_unit(the_unit);
+  }
+  if(TotalDamage >= object_max_health(Castle)/100){
+    TotalDamage -= object_max_health(Castle)/100;
+    set_object_health(Castle,object_health(Castle) - 1);
+  }
+  if(object_health(Castle) == 0)defeat("1");
+
+  static Build TimeMachine;
+  trigger Machine(num_type("1", "Time Machine") == 1){
+    set_timer("Time slowdown", 1);
+  }
+  trigger(num_type("1", "Time Machine") > 3){
+    victory("1");
+  }
+  static int AmountTime = 2, RealTime = 0;
+  if(timer_expired("Time slowdown")){
+    TimeMachine = find_building("1", "Time Machine");
+    trigger Effect(){
+      if(Night == 1)set_environment_duration("Volcanic_final_dark2", -1, 2);
+      if(Night == 0)set_environment_duration("Steppe_Final_BurialMP", -1, 2);
+    }
+    if(RealTime < 3)AmountTime = 1;
+    if(RealTime >= 3 && RealTime <= 15)AmountTime = 0;
+    if(RealTime > 20)AmountTime = rand_int(2, 5);
+    RealTime++;
+    set_game_speed(AmountTime);
+    if(object_health(TimeMachine) >= 4){
+set_object_health(TimeMachine,object_health(TimeMachine)-3); 
+      set_timer("Time slowdown", 1);
+    }
+    else if(object_health(TimeMachine) < 4){
+      destroy_building(TimeMachine);
+      set_game_speed(StandartTimeSpeed);
+      RealTime = 0;
+      AmountTime = 2;
+      if(Night == 1)set_environment_duration("Desert_Final_night", -1, 3);
+      if(Night == 0)set_environment_duration("Steppe_Final", -1, 3);
+      enable_trigger(Effect);
+      enable_trigger(Machine);
+    }
+  }
+
+if(timer_expired("EndTime")){
+  StandartTimeSpeed++;
+  set_game_speed(StandartTimeSpeed);
+  sf_Speaker_Said(4);
+  set_timer("EndTime2", 120);
+}
+if(timer_expired("EndTime2")){
+  StandartTimeSpeed++;
+  set_game_speed(StandartTimeSpeed);
+}
+
+// ====================== Dialogues =======================
+
+if(timer_expired("Dialogue")){ 
+  sf_Speaker_Said(0);
+  set_timer("Dialogue1", 25);
+}
+
+if(timer_expired("Dialogue1")){ 
+  sf_Speaker_Said(1);
+}
+
+trigger(num_type("1", "Defense Gun") > 0){
+  sf_Speaker_Said(2);
+}
+}
+
+//======================= Functions =========================
+
+bool function sf_unit_in_array(Unit the_unit, UnitType[] unit_array){
+  int scan;
+  for(scan = 0; scan < unit_array.length; scan++){
+    if(get_unit_type(the_unit) == unit_array[scan])return 1;
+  }
+  return 0;
+}
+
+UnitType function sf_give_spawn_unit(UnitType[] unit_array){
+  int scan, scan2;
+  for(scan = 0; scan>=0; scan++){
+    for(scan2 = 0; scan2 < unit_array.length; scan2++){
+      if(num_type("2", unit_array[scan2]) > scan){
+        continue;
+      }
+      else{
+        return unit_array[scan2];
+      }
+    }
+  }
+}
+
+void function sf_click_on_units(Unit the_unit){
+	if(sf_unit_in_array(the_unit, Swords) == 1){
+	  kill_unit(the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Musketeers) == 1){
+	  sf_damage_for_unit(50, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Doges) == 1){
+	  sf_damage_for_unit(34, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Horses) == 1){
+	  sf_damage_for_unit(20, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Walkers) == 1){
+	  sf_damage_for_unit(5, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Tanks) == 1){
+	  sf_damage_for_unit(2, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Scouts) == 1){
+	  sf_damage_for_unit(25, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Pirats) == 1){
+	  sf_damage_for_unit(13, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Zeppelins) == 1){
+	  sf_damage_for_unit(4, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Dirigibles) == 1){
+	  sf_damage_for_unit(9, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Spiders) == 1){
+	  sf_damage_for_unit(7, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Demolitions) == 1){
+	  sf_damage_for_unit(10, the_unit);
+	}
+	if(sf_unit_in_array(the_unit, Caravans) == 1){
+	  kill_unit(the_unit);
+	}
+
+}
+
+void function sf_damage_for_unit(int Damage, Unit the_unit){
+  if(object_health(the_unit) <= (Damage+1)*MouseDamage){
+    kill_unit(the_unit);
+  }
+  else{
+    set_object_health(the_unit, (object_health(the_unit) - MouseDamage*Damage));
+  }
+}
+
+void function sf_Speaker_Said(int Dialogue_Number){
+  switch(Dialogue_Number){
+    case 0:
+	add_chat("Look, I'm trying to build a time machine here. It doesn't turn out very well, but I'm close to success! I also owe a little on my electricity bills... Can you delay them until I go back in time and invest all my money in bitcoin? Thanks", "1", "Elbert Ainstein", "Distruzio, the Wayward Prodigy");
+	break;
+    case 1:
+	add_chat("Shake money from them and discover different things in research", "1", "Elbert Ainstein", "Distruzio, the Wayward Prodigy");
+	break;
+    case 2:
+	switch(rand_int(0, 3)){
+	    case 0:
+		add_chat("This gun should help!", "1", "Elbert Ainstein", "Distruzio, the Wayward Prodigy");
+		break;
+	    case 1:
+		add_chat("Hope they don't get hurt.", "1", "Elbert Ainstein", "Distruzio, the Wayward Prodigy");
+		break;
+	    case 2:
+		add_chat("According to the documents, this is a robot vacuum cleaner!", "1", "Elbert Ainstein", "Distruzio, the Wayward Prodigy");
+		break;
+	}
+    case 3:
+	add_chat("Okay now you can slow down time", "1", "Elbert Ainstein", "Distruzio, the Wayward Prodigy");
+	break;
+    case 4:
+	add_chat("I'm almost done here, but there might be some problems... hope you can handle it!", "1", "Elbert Ainstein", "Distruzio, the Wayward Prodigy");
+	break;
+    case 5:
+	add_chat("We'll confiscate your castle!", "2", "???", "Doge Guard Skirmish");
+	break;
+    case 6:
+	add_chat("Brrrr...", "2", "???", "Burrowing Spider");
+	break;
+  }
+}
+
+UnitType[] function sf_Random_unit(int[] unit_cost){
+  int TotalAmount = 0, sum = 0, scan, rand_cost, for_return;
+  for(scan = 0; scan < unit_cost.length; scan++){
+    TotalAmount+=unit_cost[scan];
+  }
+  rand_cost = rand_int(1, TotalAmount+1);
+  for(scan = 0; scan < unit_cost.length; scan++){
+    sum += unit_cost[scan];
+    if(rand_cost <= sum){
+      for_return = scan;
+      break;
+    }
+  }
+  switch(for_return){
+    case 0:
+     return Swords;
+    case 1:
+     return Musketeers;
+    case 2:
+     return Doges;
+    case 3:
+     return Horses;
+    case 4:
+     return Walkers;
+    case 5:
+     return Tanks;
+    case 6:
+     return Scouts;
+    case 7:
+     return Pirats;
+    case 8:
+     return Zeppelins;
+    case 9:
+     return Dirigibles;
+    case 10:
+     return Spiders;
+    case 11:
+     return Demolitions;
+    case 12:
+     return Caravans;
+  }
+}
+
+void function sf_CastleHP(int CastleHealth){
+  static Build Castle = find_building("1", "Castle for win");
+  int PlusHealth = object_health(Castle);
+  set_object_type_max_health("Castle for win", CastleHealth);
+  set_object_health(Castle, PlusHealth);
+}
+
+void ui_callback on_unit_clicked (Unit the_unit){
+	if(is_paused() == 0){
+	  issue sf_click_on_units(the_unit);
+	}
+}
+
+void game_callback on_unit_killed (Unit the_unit) {
+  if(!is_unit_in_region(the_unit, "Castle_region") && GLOBALS["MassKill"] == 0){
+    Leader damage_leader = unit_get_damage_leader(the_unit);
+    Object the_object = get_unit_object(the_unit);
+    if (sf_unit_in_array(the_unit, Swords) == 1){
+      Text bubble_text_msg = Text(1 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 1);      
+    }
+    else if (sf_unit_in_array(the_unit, Musketeers) == 1){
+      Text bubble_text_msg = Text(2 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 2);   
+    }
+    else if (sf_unit_in_array(the_unit, Doges) == 1){
+      Text bubble_text_msg = Text(3 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 3);   
+    }
+    else if (sf_unit_in_array(the_unit, Horses) == 1){
+      Text bubble_text_msg = Text(5 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 5);   
+    }
+    else if (sf_unit_in_array(the_unit, Walkers) == 1){
+      Text bubble_text_msg = Text(20 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 20);   
+    }
+    else if (sf_unit_in_array(the_unit, Tanks) == 1){
+      Text bubble_text_msg = Text(50 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 50);   
+    }
+    else if (sf_unit_in_array(the_unit, Scouts) == 1){
+      Text bubble_text_msg = Text(4 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 4);   
+    }
+    else if (sf_unit_in_array(the_unit, Pirats) == 1){
+      Text bubble_text_msg = Text(8 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 8);   
+    }
+    else if (sf_unit_in_array(the_unit, Zeppelins) == 1){
+      Text bubble_text_msg = Text(25 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 25);   
+    }
+    else if (sf_unit_in_array(the_unit, Dirigibles) == 1){
+      Text bubble_text_msg = Text(12 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 12);
+      for(int scan = 0; scan < 5; scan++){
+        fill_unit_group("2", sf_give_spawn_unit(Doges), "Main Group", 1, object_location(the_unit));
+        unit_group_attack_to_along_path("Main Group", "Main Path");
+        clear_unit_group("Main Group");
+      }
+    }
+    else if (sf_unit_in_array(the_unit, Spiders) == 1){
+      Text bubble_text_msg = Text(15 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 15);   
+    }
+    else if (sf_unit_in_array(the_unit, Demolitions) == 1){
+      Text bubble_text_msg = Text(10 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      give_good("1", "Wealth", 10);   
+    }
+    else if (sf_unit_in_array(the_unit, Caravans) == 1){
+      Text bubble_text_msg = Text(-50 + "#ICON2");
+      object_add_bubble_text(the_object, bubble_text_msg);
+      take_good("1", "Wealth", 50);   
+    }
+  }
+}
+
+void game_callback on_spell_cast(SpellType the_spell, Unit unit_caster, Leader leader_caster, Location target_loc, Unit target_unit, Build target_building){
+  if (the_spell == "Kill em All"){
+    set_timer("not_gold",1);
+    GLOBALS["MassKill"] = 1;
+    for(;num_units("2") > 0;){
+      UnitGroup ByeBye = find_unit("2","");
+      kill_unit_group(ByeBye);
+      clear_unit_group(ByeBye);
+    }
+  }
+}
+

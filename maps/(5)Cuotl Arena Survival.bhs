@@ -1,0 +1,2071 @@
+UnitType HeroType[] = ["Caliph, the Desert Ruler L1", "Caliph, the Desert Ruler L2", "Caliph, the Desert Ruler L3", "Caliph, the Desert Ruler L4", "Caliph, the Desert Ruler L5", "Aizat, the Dark Healer L1", "Aizat, the Dark Healer L2", "Aizat, the Dark Healer L3", "Aizat, the Dark Healer L4", "Aizat, the Dark Healer L5", "Geovanni, the Vinci Engineer L1", "Geovanni, the Vinci Engineer L2", "Geovanni, the Vinci Engineer L3", "Geovanni, the Vinci Engineer L4", "Geovanni, the Vinci Engineer L5", "Francesco, the Edgy Sniper L1", "Francesco, the Edgy Sniper L2", "Francesco, the Edgy Sniper L3", "Francesco, the Edgy Sniper L4", "Francesco, the Edgy Sniper L5"];
+
+Unit RedHero;
+Unit BlueHero;
+Unit GreenHero;
+Unit YellowHero;
+ 
+Location RedHeroLoc;
+Location BlueHeroLoc;
+Location GreenHeroLoc;
+Location YellowHeroLoc;
+
+UnitType sunboss_type = "Xil, the Sun God";
+
+UnitType grunt_type;
+UnitType jaguar_type;
+UnitType snake_type;
+UnitType idol_type;
+UnitType sphere_type;
+UnitType fighter_type;
+
+buildType top_middle_building;
+buildType bottom_middle_building;
+buildType right_middle_building;
+buildType left_middle_building;
+
+int RedHeroHealth;
+int BlueHeroHealth;
+int GreenHeroHealth;
+int YellowHeroHealth;
+
+int MaxExtraUnits = 4;
+//int num_extras = ((unit_group_length("extraonegroup")) + (unit_group_length("extratwogroup")) + (unit_group_length("extrathreegroup")) + (unit_group_length("extrafourgroup")));
+
+int timonium_to_give = 300; // Give that amount of timonium to the player
+int wealth_to_give = 300; // Give that amount of wealth to the player
+int maxsummons = 4;
+int maxunits = 100;
+int redkills = 0;
+int bluekills = 0;
+int greenkills = 0;
+int yellowkills = 0;
+bool DeathGodPlayer = false; // Is Dead God a player?
+bool ModeChosen = false; // Have we chosen the mode?
+bool TimerChosen = false; // Have we chosen the timer?
+bool say_p0 = false; //
+bool say_p1 = false; //
+bool say_p2 = false; //
+bool say_p3 = false; //
+bool say_p4 = false; //
+bool defeated_red = false; //
+bool defeated_blue = false; //
+bool defeated_green = false; //
+bool defeated_yellow = false; //
+bool SentinelHorde = false; //
+bool IdolHorde = false; //
+int building_set_int; // What building set will be created?
+int phrase_to_say; // What phrase shall be said at the beginning of the game?
+int modifier; // Multiply the amount of units to spawn by this number (!(UNUSED)!)
+
+int red_num_summons = 0;
+int blue_num_summons = 0;
+int green_num_summons = 0;
+int yellow_num_summons = 0;
+
+int SupriseAirGroupSpawnTimer; // Time between air raid group spawns
+
+void function sf_GameSetup();
+
+void game_callback on_game_frame () {
+
+RedHeroLoc = unit_location(RedHero);
+BlueHeroLoc = unit_location(BlueHero);
+GreenHeroLoc = unit_location(GreenHero);
+YellowHeroLoc = unit_location(YellowHero);
+
+RedHeroHealth = unit_health(RedHero);
+BlueHeroHealth = unit_health(BlueHero);
+GreenHeroHealth = unit_health(GreenHero);
+YellowHeroHealth = unit_health(YellowHero);
+
+//=== UNITS ===// Basic unit setup is based on the Easy Mode
+
+//=== PATHS ===//
+static path topbridge_path;
+static path bottombridge_path;
+static path right_top_bridge_path;
+static path right_bottom_bridge_path;
+static path left_top_bridge_path;
+static path left_bottom_bridge_path;
+
+//=== UNIT VARIABLES ===// Basic amount of units to spawn is based on the Easy Mode
+static int GruntsToSpawn = 6; // Amount of units to spawn
+static int JaguarsToSpawn = 3; // ^ ^
+static int SnakesToSpawn = 2; // ^ ^
+static int IdolsToSpawn = 1; // ^ ^
+static int SpheresToSpawn = 1; // ^ ^
+static int FightersToSpawn = 2; // ^ ^
+static int ExtrasToSpawn = 4; // ^ ^
+
+//=== TIMER VARIABLES ===// Had to move these from labels to here
+static int LightGroupSpawnTime = 200; // Time between light group spawns
+static int MediumGroupSpawnTime = 320; // Time between medium group spawns
+static int HugeGroupSpawnTime = 440; // Time between huge group spawns
+static int GiantGroupSpawnTime = 560; // Time between giant group spawns
+static int ExtraUnitSpawnTime = 260; // Time between giant group spawns
+//=== UPGRADE TIMERS ===// Basic upgrade timers are based on the Easy Mode
+static int GruntUpgradeTime = 120; // Time between light group spawns
+static int JaguarUpgradeTime = 240; // Time between medium group spawns
+static int SnakeUpgradeTime = 360; // Time between huge group spawns
+static int IdolUpgradeTime = 480; // Time between giant group spawns
+static int SphereUpgradeTime = 600; // Time between giant group spawns
+static int FighterUpgradeTime = 240; // Time between giant group spawns
+
+//=== UNIT UPGRADES VARIABLES ===//
+static bool GuardianUpgraded = false;
+static bool DefenderUpgraded = false;
+static bool VeteranJaguarUpgraded = false;
+static bool EliteJaguarUpgraded = false;
+static bool VeteranDeathSnakeUpgraded = false;
+static bool GreatIdolUpgraded = false;
+static bool DecaySphereUpgraded = false;
+static bool VeteranFighterUpgraded = false;
+static bool EliteFighterUpgraded = false;
+
+//=== DIFFICULTY VARIABLES ===//
+static bool EasyMode = false;
+static bool MediumMode = false;
+static bool HardMode = false;
+static bool ExtremeMode = false;
+
+static int EasyModeScore = 0; // Keep these. If we'll want to make it a vote we'll use these
+static int MediumModeScore = 0; // ^ ^
+static int HardModeScore = 0; // ^ ^
+static int ExtremeModeScore = 0; // ^ ^
+
+//=== TIMER VARIABLES ===//
+static bool FIFTEENMINS = false;
+static bool TWENTYFIVEMINUTES = false;
+static bool THIRTYFIVEMINUTES = false;
+static bool SURVIVAL = false;
+
+static int FIFTEENMINSScore = 0; // Keep these. If we'll want to make it a vote we'll use these
+static int TWENTYFIVEMINUTESScore = 0; // ^ ^
+static int THIRTYFIVEMINUTESScore = 0; // ^ ^
+static int SURVIVALScore = 0; // ^ ^
+
+//=== SCORE VARIABLES ===//
+static int redscore = 0;
+static int bluescore = 0;
+static int greenscore = 0;
+static int yellowscore = 0;
+static int score;
+
+//=== OTHER VARIABLES ===// Please comment on what these extra variables do. Thank you!
+// static bool DeathGodPlayer = false; // Is Dead God a player?
+// static bool ModeChosen = false; // Have we chosen the mode?
+// static bool TimerChosen = false; // Have we chosen the timer?
+// static int building_set_int; // What building set will be created?
+// static int phrase_to_say; // What phrase shall be said at the beginning of the game?
+// static int modifier; // Multiply the amount of units to spawn by this number (!(UNUSED)!)
+
+//static int SupriseAirGroupSpawnTimer; // Time between air raid group spawns
+static int CitiesToSpawn_1; // Used for a random chance of spawning a Cuotl Master Unit in a giant wave
+static int CitiesToSpawn_2; // ^ ^
+static int path_to_choose_topbridge_int; // Used for a coin toss between different paths
+static int path_to_choose_bottombridge_int; // ^ ^
+static int path_to_choose_right_top_bridge_int; // ^ ^
+static int path_to_choose_right_bottom_bridge_int; // ^ ^
+static int path_to_choose_left_top_bridge_int; // ^ ^
+static int path_to_choose_left_bottom_bridge_int; // ^ ^
+//int baserate = 0; // Base timonium rate
+//int cp1level = 1; // Base timonium rate
+//int cp2level = 1; // Base timonium rate
+//int cp3level = 1; // Base timonium rate
+//int cp4level = 1; // Base timonium rate
+static int LightGroupSpawnedNum; // Time between light group spawns
+static int MediumGroupSpawnedNum; // Time between medium group spawns
+static int HugeGroupSpawnedNum; // Time between huge group spawns
+static int GiantGroupSpawnedNum; // Time between giant group spawns
+
+//=== LEADERS ===//
+ Leader RED = "1";
+ Leader BLUE = "2";
+ Leader GREEN = "3";
+ Leader YELLOW = "4";
+ Leader DEATHGOD = "5";
+
+ UnitGroup Vengeance = find_unit(DEATHGOD,"Cuotl Master Unit");
+ Unit CityVengeance = unit_at_index(Vengeance, 0);
+ 
+ unit_set_visible("1", CityVengeance);
+
+ UnitGroup XilXil = find_unit(DEATHGOD,"Xil, the Sun God");
+ Unit Xil = unit_at_index(XilXil, 0); 
+
+ RedHero = unit_at_index("red_unit", 0);
+ BlueHero = unit_at_index("blue_unit", 0);
+ GreenHero = unit_at_index("green_unit", 0);
+ YellowHero = unit_at_index("yellow_unit", 0);
+ 
+ RedHeroLoc = unit_location(RedHero);
+ BlueHeroLoc = unit_location(BlueHero);
+ GreenHeroLoc = unit_location(GreenHero);
+ YellowHeroLoc = unit_location(YellowHero);
+
+  labels {
+  //=== SPAWNER TIMERS ===// Basic spawn timers are based on the Easy Mode
+  //LightGroupSpawnTime = 120, // Time between light group spawns
+  //MediumGroupSpawnTime = 240, // Time between medium group spawns
+  //HugeGroupSpawnTime = 360, // Time between huge group spawns
+  //GiantGroupSpawnTime = 480, // Time between giant group spawns
+  //=== UPGRADE TIMERS ===// Basic upgrade timers are based on the Easy Mode
+  //GruntUpgradeTime = 120, // Time between light group spawns
+  //JaguarUpgradeTime = 240, // Time between medium group spawns
+  //SnakeUpgradeTime = 360, // Time between huge group spawns
+  //IdolUpgradeTime = 480, // Time between giant group spawns
+  //SphereUpgradeTime = 600, // Time between giant group spawns
+  //FighterUpgradeTime = 240, // Time between giant group spawns
+  //=== MISC TIMERS ===// Please comment on what these extra timers do. Thank you!
+  SETUP_TIMER = 60, // Setup time
+  }
+
+  run_once {
+
+ remove_all_cooldowns(DEATHGOD);
+
+  hide_script_window("resource_win");
+  show_script_window("resource_win");
+
+   set_timer("setup_timer", SETUP_TIMER);
+
+    set_base_rate(RED, "Timonium", -10);
+    set_base_rate(BLUE, "Timonium", -10);
+    set_base_rate(YELLOW, "Timonium", -10);
+    set_base_rate(GREEN, "Timonium", -10);
+    
+    set_commerce_cap(RED, 1000);
+    set_commerce_cap(BLUE, 1000);
+    set_commerce_cap(YELLOW, 1000);
+    set_commerce_cap(GREEN, 1000);
+    
+    make_alliance(RED, BLUE);
+    make_alliance(RED, GREEN);
+    make_alliance(RED, YELLOW);
+    make_alliance(GREEN, BLUE);
+    make_alliance(GREEN, RED);
+    make_alliance(GREEN, YELLOW);
+    make_alliance(YELLOW, GREEN);
+    make_alliance(YELLOW, BLUE);
+    make_alliance(YELLOW, RED);
+
+     building_construction_disable(RED);
+     research_disable(RED);
+
+     building_construction_disable(BLUE);
+     research_disable(BLUE);
+
+     building_construction_disable(YELLOW);
+     research_disable(YELLOW);
+
+     building_construction_disable(GREEN);
+     research_disable(GREEN);
+
+      //disable_trigger("defeat");
+      //disable_trigger("CP2Enemy");
+      //disable_trigger("CP3Enemy");
+      //disable_trigger("CP4Enemy");
+  }
+
+/*trigger CP1Player(get_building_leader("cp1") != DEATHGOD) {
+
+ baserate = baserate+50*cp1level;
+
+  set_base_rate(RED, "Timonium", baserate);
+   set_base_rate(BLUE, "Timonium", baserate);
+    set_base_rate(GREEN, "Timonium", baserate);
+  set_base_rate(YELLOW, "Timonium", baserate);
+
+   enable_trigger("CP1Enemy");
+}
+
+ trigger CP2Player(get_building_leader("cp2") != DEATHGOD) {
+
+ baserate = baserate+50*cp2level;
+
+  set_base_rate(RED, "Timonium", baserate);
+   set_base_rate(BLUE, "Timonium", baserate);
+    set_base_rate(GREEN, "Timonium", baserate);
+  set_base_rate(YELLOW, "Timonium", baserate);
+
+   enable_trigger("CP2Enemy");
+}
+
+ trigger CP3Player(get_building_leader("cp3") != DEATHGOD) {
+
+ baserate = baserate+50*cp3level;
+
+  set_base_rate(RED, "Timonium", baserate);
+   set_base_rate(BLUE, "Timonium", baserate);
+    set_base_rate(GREEN, "Timonium", baserate);
+  set_base_rate(YELLOW, "Timonium", baserate);
+
+   enable_trigger("CP3Enemy");
+}
+
+ trigger CP4Player(get_building_leader("cp4") != DEATHGOD) {
+
+ baserate = baserate+50*cp4level;
+
+  set_base_rate(RED, "Timonium", baserate);
+   set_base_rate(BLUE, "Timonium", baserate);
+    set_base_rate(GREEN, "Timonium", baserate);
+  set_base_rate(YELLOW, "Timonium", baserate);
+
+   enable_trigger("CP4Enemy");
+}
+
+trigger CP1Enemy(get_building_leader("cp1") == DEATHGOD) {
+
+ baserate = baserate-50*cp1level;
+
+  set_base_rate(RED, "Timonium", baserate);
+   set_base_rate(BLUE, "Timonium", baserate);
+    set_base_rate(GREEN, "Timonium", baserate);
+  set_base_rate(YELLOW, "Timonium", baserate);
+
+   enable_trigger("CP1Player");
+}
+
+trigger CP2Enemy(get_building_leader("cp2") == DEATHGOD) {
+
+ baserate = baserate-50*cp2level;
+
+  set_base_rate(RED, "Timonium", baserate);
+   set_base_rate(BLUE, "Timonium", baserate);
+    set_base_rate(GREEN, "Timonium", baserate);
+  set_base_rate(YELLOW, "Timonium", baserate);
+
+   enable_trigger("CP2Player");
+}
+
+trigger CP3Enemy(get_building_leader("cp3") == DEATHGOD) {
+
+ baserate = baserate-50*cp3level;
+
+  set_base_rate(RED, "Timonium", baserate);
+   set_base_rate(BLUE, "Timonium", baserate);
+    set_base_rate(GREEN, "Timonium", baserate);
+  set_base_rate(YELLOW, "Timonium", baserate);
+
+   enable_trigger("CP3Player");
+}
+
+trigger CP4Enemy(get_building_leader("cp4") == DEATHGOD) {
+
+ baserate = baserate-50*cp4level;
+
+  set_base_rate(RED, "Timonium", baserate);
+   set_base_rate(BLUE, "Timonium", baserate);
+    set_base_rate(GREEN, "Timonium", baserate);
+  set_base_rate(YELLOW, "Timonium", baserate);
+
+   enable_trigger("CP4Player");
+} */
+
+  trigger(num_type(RED, "EM") > 0) {
+
+    EasyModeScore++;
+
+     EasyMode = true;
+
+      ModeChosen = true; 
+      
+       destroy_building("diff");
+
+      bubble_text_cent_screen("Easy Mode!");
+  }
+
+  trigger(num_type(RED, "MM") > 0) {
+
+    MediumModeScore++;
+
+     MediumMode = true;
+  
+      ModeChosen = true;
+
+       destroy_building("diff");
+
+      bubble_text_cent_screen("Medium Mode!");
+  }
+
+  trigger(num_type(RED, "HM") > 0) {
+
+    HardModeScore++;
+
+     HardMode = true;
+ 
+      ModeChosen = true;
+
+       destroy_building("diff");
+
+      bubble_text_cent_screen("Hard Mode!");
+  }
+
+  trigger(num_type(RED, "15M") > 0) {
+
+    FIFTEENMINSScore++;
+
+     FIFTEENMINS = true;
+  
+      TimerChosen = true;
+
+       destroy_building("time");
+  }
+
+  trigger(num_type(RED, "25M") > 0) {
+
+    TWENTYFIVEMINUTESScore++;
+
+     TWENTYFIVEMINUTES = true;
+
+      TimerChosen = true;
+
+       destroy_building("time");
+  }
+
+  trigger(num_type(RED, "35M") > 0) {
+
+    THIRTYFIVEMINUTESScore++;
+
+     THIRTYFIVEMINUTES = true;
+
+      TimerChosen = true;
+
+       destroy_building("time");
+  }
+
+  trigger(num_type(RED, "SUR") > 0) {
+
+    SURVIVALScore++;
+
+     SURVIVAL = true;
+
+      TimerChosen = true;
+
+       destroy_building("time");
+  }
+
+  trigger EarlyStart((TimerChosen == true) && (ModeChosen == true)) {
+   
+   disable_trigger("TimerStart");
+
+    sf_GameSetup();
+
+     set_timer("LightGroupSpawn", LightGroupSpawnTime);
+     set_timer("MediumGroupSpawn", MediumGroupSpawnTime);
+     set_timer("HugeGroupSpawn", HugeGroupSpawnTime);
+     set_timer("GiantGroupSpawn", GiantGroupSpawnTime);
+  
+     set_timer("GruntUpgrade", GruntUpgradeTime);
+
+     set_timer("AIMapScanTimer", 240);
+
+     add_reveal_point("1", "top_middle_loc", 15);
+     add_reveal_point("1", "bottom_middle_loc", 15);
+     add_reveal_point("1", "right_middle_loc", 15);
+     add_reveal_point("1", "right_middle_loc1", 15);
+     add_reveal_point("1", "left_middle_loc", 15);
+     add_reveal_point("1", "left_middle_loc1", 15);
+
+      pan_camera("centre_loc", -1, 100);
+
+       create_building(RED, "Border Push", "centre_loc");
+      
+    BuildGroup BPush = find_building(RED,"Border Push");
+
+   Build BBPush = building_at_index(BPush, 0);
+  
+    give_object_buff(BBPush, BBPush, "Plot Object", -1);
+
+     set_timer("timerr", 60);
+
+       destroy_building("funny_settings");
+       destroy_building("unfuuni_settings");
+
+        set_timer("ExtraUnitSpawn", ExtraUnitSpawnTime);
+        set_timer("XilSpawnTimer", GiantGroupSpawnTime+LightGroupSpawnTime);
+        set_timer("idletoattack_timer", LightGroupSpawnTime);
+  }
+    
+  trigger TimerStart(timer_expired("TimeToChoose") && ((TimerChosen == false) || (ModeChosen == false))) {
+
+   if(TimerChosen == false) {
+
+     TWENTYFIVEMINUTES = true;
+   } else {
+
+   }
+
+   if(ModeChosen == false) {
+
+     MediumMode = true;
+   } else {
+
+     }
+  }
+
+ trigger(FIFTEENMINS == true) {
+ 
+  start_cast_timer("timer_one");
+
+   set_timer("timer_one_script", 900);
+  }
+
+ trigger(TWENTYFIVEMINUTES == true) {
+ 
+  start_cast_timer("timer_two");
+
+   set_timer("timer_one_script", 1500);
+  }
+
+ trigger(THIRTYFIVEMINUTES == true) {
+ 
+  start_cast_timer("timer_three");
+
+   set_timer("timer_one_script", 2100);
+  }
+
+ trigger(SURVIVAL == true) {
+ 
+  }
+
+ trigger(timer_expired("timer_one_script")) {
+
+  victory(RED);
+  victory(BLUE);
+  victory(GREEN);
+  victory(YELLOW);
+ }
+
+ trigger(EasyMode == true) {
+
+   LightGroupSpawnTime = 280;
+   MediumGroupSpawnTime = 450;
+   HugeGroupSpawnTime = 560;
+   GiantGroupSpawnTime = 680;
+
+     grunt_type = "Sentinel";
+     jaguar_type = "Sun Jaguar";
+     snake_type = "Death Snake";
+     idol_type = "Greater Idol";
+     sphere_type = "Death Sphere";
+     fighter_type = "Quetzal";
+    
+    GuardianUpgraded = false;
+    DefenderUpgraded = false;
+    VeteranJaguarUpgraded = false;
+    EliteJaguarUpgraded = false;
+    VeteranDeathSnakeUpgraded = false;
+    GreatIdolUpgraded = false;
+    DecaySphereUpgraded = false;
+    VeteranFighterUpgraded = false;
+    EliteFighterUpgraded = false;
+    
+     maxunits = 110;
+  }
+    
+  trigger(MediumMode == true) {
+
+   LightGroupSpawnTime = 270;
+   MediumGroupSpawnTime = 440;
+   HugeGroupSpawnTime = 540;
+   GiantGroupSpawnTime = 665;
+
+    GruntUpgradeTime = 90;
+    JaguarUpgradeTime = 180;
+    SnakeUpgradeTime = 270;
+    IdolUpgradeTime = 380;
+    SphereUpgradeTime = 470;
+    FighterUpgradeTime = 180;
+      
+     GruntsToSpawn = 8;
+     JaguarsToSpawn = 4;
+     SnakesToSpawn = 3;
+     IdolsToSpawn = 2;
+     SpheresToSpawn = 1;
+     FightersToSpawn = 3;
+     ExtrasToSpawn = 2;
+
+      grunt_type = "Guardian";
+      jaguar_type = "Veteran Sun Jaguar";
+      snake_type = "Death Snake";
+      idol_type = "Greater Idol";
+      sphere_type = "Death Sphere";
+      fighter_type = "Veteran Quetzal";
+
+       timonium_to_give = 200;
+
+        GuardianUpgraded = true;
+        DefenderUpgraded = false;
+        VeteranJaguarUpgraded = true;
+        EliteJaguarUpgraded = false;
+        VeteranDeathSnakeUpgraded = false;
+        GreatIdolUpgraded = false;
+        DecaySphereUpgraded = false;
+        VeteranFighterUpgraded = true;
+        EliteFighterUpgraded = false;
+        
+     maxunits = 155;
+  }
+
+  trigger(HardMode == true) {
+
+   LightGroupSpawnTime = 230;
+   MediumGroupSpawnTime = 400;
+   HugeGroupSpawnTime = 500;
+   GiantGroupSpawnTime = 630;
+
+    GruntUpgradeTime = 60;
+    JaguarUpgradeTime = 120;
+    SnakeUpgradeTime = 180;
+    IdolUpgradeTime = 240;
+    SphereUpgradeTime = 300;
+    FighterUpgradeTime = 180;
+
+     GruntsToSpawn = 10;
+     JaguarsToSpawn = 5;
+     SnakesToSpawn = 4;
+     IdolsToSpawn = 3;
+     SpheresToSpawn = 2;
+     FightersToSpawn = 4;
+     ExtrasToSpawn = 2;
+
+      grunt_type = "Defender";
+      jaguar_type = "Elite Sun Jaguar";
+      snake_type = "Elite Death Snake";
+      idol_type = "Elite Greater Idol";
+      sphere_type = "Death Sphere";
+      fighter_type = "Elite Quetzal";
+
+       timonium_to_give = 100;
+       wealth_to_give = 250;
+
+        GuardianUpgraded = true;
+        DefenderUpgraded = true;
+        VeteranJaguarUpgraded = true;
+        EliteJaguarUpgraded = true;
+        VeteranDeathSnakeUpgraded = true;
+        GreatIdolUpgraded = true;
+        DecaySphereUpgraded = false;
+        VeteranFighterUpgraded = true;
+        EliteFighterUpgraded = true;
+
+             maxunits = 220;
+  }
+
+  trigger(ExtremeMode == true) {
+
+   LightGroupSpawnTime = 30;
+   MediumGroupSpawnTime = 90;
+   HugeGroupSpawnTime = 120;
+   GiantGroupSpawnTime = 150;
+
+    GruntUpgradeTime = 30;
+    JaguarUpgradeTime = 90;
+    SnakeUpgradeTime = 120;
+    IdolUpgradeTime = 150;
+    SphereUpgradeTime = 180;
+    FighterUpgradeTime = 210;
+
+     GruntsToSpawn = 14;
+     JaguarsToSpawn = 7;
+     SnakesToSpawn = 6;
+     IdolsToSpawn = 4;
+     SpheresToSpawn = 3;
+     FightersToSpawn = 5;
+     ExtrasToSpawn = 3;
+
+      grunt_type = "Defender";
+      jaguar_type = "Elite Sun Jaguar";
+      snake_type = "Elite Death Snake";
+      idol_type = "Elite Greater Idol";
+      sphere_type = "Decay Sphere";
+      fighter_type = "Elite Quetzal";
+
+       timonium_to_give = 100;
+       wealth_to_give = 75;
+
+        GuardianUpgraded = true;
+        DefenderUpgraded = true;
+        VeteranJaguarUpgraded = true;
+        EliteJaguarUpgraded = true;
+        VeteranDeathSnakeUpgraded = true;
+        GreatIdolUpgraded = true;
+        DecaySphereUpgraded = true;
+        VeteranFighterUpgraded = true;
+        EliteFighterUpgraded = true;
+  }
+
+  trigger(num_type(RED, "SentinelHorde") > 0) {
+  
+    SentinelHorde = true; 
+    
+      destroy_building("funny_settings");
+     
+       bubble_text_cent_screen("Sentinel Horde! Incoming!");  
+  }
+  
+  if(SentinelHorde == true) {
+  	
+      jaguar_type = grunt_type;
+      snake_type = grunt_type;
+      idol_type = grunt_type;
+      sphere_type = grunt_type;
+      fighter_type = grunt_type; 
+   
+      maxunits = 325;
+   
+      disable_trigger("AirGroupSpawnTrigger");  
+
+  }
+
+  trigger IdleToAttack(timer_expired("idletoattack_timer")) {
+
+        for (int l = 0; l < num_players(); l++)
+        {
+            UnitGroup allunit = find_unit(get_leader(l), "$ALL$");
+            for (int scan = 0; scan < unit_group_length(allunit); scan++)
+            {
+               Unit the_unit = unit_at_index(allunit, scan);
+               Leader the_leader = (get_unit_leader(the_unit));
+               if (is_unit_idle(the_unit))
+               {
+                   if ((the_leader) == "5")
+                   {
+                   	  if(unit_group_length("red_unit") > 0) {
+                         unit_attack_to(the_unit, RedHeroLoc);
+                   	  } else if(unit_group_length("blue_unit") > 0) {
+                         unit_attack_to(the_unit, BlueHeroLoc);
+                   	  } else if(unit_group_length("green_unit") > 0) {
+                         unit_attack_to(the_unit, GreenHeroLoc);
+                   	  } else if(unit_group_length("yellow_unit") > 0) {
+                         unit_attack_to(the_unit, YellowHeroLoc);
+                      }
+                   }
+                }
+            }
+        }
+        set_timer("idletoattack_timer", 15);
+    enable_trigger("IdleToAttack");
+    }
+
+  trigger(num_type(RED, "TenLives") > 0) {
+  
+    maxsummons = 11;
+    
+      destroy_building("funny_settings");
+     
+       bubble_text_cent_screen("You can resummon your hero 10 times.");  
+  }
+
+  trigger(num_type(RED, "IdolHorde") > 0) {
+  
+    IdolHorde = true; 
+     
+      destroy_building("unfuuni_settings");
+      
+       bubble_text_cent_screen("Idols! Incoming!");  
+  }
+  
+  if(IdolHorde == true) {
+  	
+      jaguar_type = idol_type;
+      snake_type = idol_type;
+      grunt_type = idol_type;
+      sphere_type = idol_type;
+      fighter_type = idol_type;
+  
+      disable_trigger("AirGroupSpawnTrigger");  
+
+    }
+
+  trigger(num_type(RED, "OneLife") > 0) {
+  
+    maxsummons = 2;
+    
+      destroy_building("unfuuni_settings");
+     
+       bubble_text_cent_screen("You can't resummon your hero.");  
+  }
+  
+// trigger (timer_expired("GruntUpgradeTimer")) {
+ 
+  //   if(GuardianUpgraded == false) {
+     	
+  //      grunt_type = "Guardian";
+        
+ //       } if(GuardianUpgraded == false) {
+     	
+ //       grunt_type = "Guardian";
+        
+//        }
+ 	
+//  }
+
+  trigger (defeated_red == true) {
+
+    defeat(RED);
+
+  }
+
+  trigger (defeated_blue == true) {
+
+    defeat(BLUE);
+
+  }
+
+  trigger (defeated_green == true) {
+
+    defeat(GREEN);
+
+  }
+
+  trigger (defeated_yellow == true) {
+
+    defeat(YELLOW);
+
+  }
+
+  trigger ExtraUnitSpawnTrigger(timer_expired("ExtraUnitSpawn")) {
+
+   UnitType ExtraOne;
+   UnitType ExtraTwo;
+   UnitType ExtraThree;
+   UnitType ExtraFour;
+
+   int extra_unit_one = rand_int(0,2);
+   int extra_unit_two = rand_int(0,2);
+   int extra_unit_three = rand_int(0,2);
+   int extra_unit_four = rand_int(0,2);
+
+   switch(extra_unit_one) {
+
+     case 0:
+      ExtraOne = "Stunner";
+      break;
+
+     case 1:
+      ExtraOne = "Beamer";
+      break;
+   }
+
+   switch(extra_unit_two) {
+
+     case 0:
+      ExtraTwo = "Stunner";
+      break;
+
+     case 1:
+      ExtraTwo = "Beamer";
+      break;
+   }
+
+   switch(extra_unit_three) {
+
+     case 0:
+      ExtraThree = "Stunner";
+      break;
+
+     case 1:
+      ExtraThree = "Beamer";
+      break;
+   }
+
+   switch(extra_unit_four) {
+
+     case 0:
+      ExtraFour = "Stunner";
+      break;
+
+     case 1:
+      ExtraFour = "Beamer";
+      break;
+   }
+    
+    if ((unit_group_length("extraonegroup") < 4)) {
+        fill_unit_group(DEATHGOD, ExtraOne, "extraonegroup", 1, "SpawnerLoc1");
+    }  if ((unit_group_length("extraonegroup") < 4)) {
+    fill_unit_group(DEATHGOD, ExtraTwo, "extraonegroup", 1, "SpawnerLoc2");
+    }  if ((unit_group_length("extraonegroup") < 4)) {
+    fill_unit_group(DEATHGOD, ExtraThree, "extraonegroup", 1, "SpawnerLoc3");
+    }  if ((unit_group_length("extraonegroup") < 4)) {
+    fill_unit_group(DEATHGOD, ExtraFour, "extraonegroup", 1, "SpawnerLoc4");
+    }
+
+    int AttackGoal = rand_int(1,5);
+        switch(extra_unit_one) {
+          
+     case 1:
+      if(unit_group_length("red_unit") > 0){
+      unit_group_attack_to("extraonegroup", RedHeroLoc);
+      } else if(unit_group_length("blue_unit") > 0){
+      unit_group_attack_to("extraonegroup", BlueHeroLoc);
+      } else if(unit_group_length("green_unit") > 0){
+      unit_group_attack_to("extraonegroup", GreenHeroLoc);
+      } else if(unit_group_length("yellow_unit") > 0){
+      unit_group_attack_to("extraonegroup", YellowHeroLoc);
+      }
+      break;
+     case 2:
+      if(unit_group_length("blue_unit") > 0){
+      unit_group_attack_to("extraonegroup", BlueHeroLoc);
+      } else if(unit_group_length("red_unit") > 0){
+      unit_group_attack_to("extraonegroup", RedHeroLoc);
+      } else if(unit_group_length("green_unit") > 0){
+      unit_group_attack_to("extraonegroup", GreenHeroLoc);
+      } else if(unit_group_length("yellow_unit") > 0){
+      unit_group_attack_to("extraonegroup", YellowHeroLoc);
+      }
+      break;
+     case 3:
+      if(unit_group_length("green_unit") > 0){
+      unit_group_attack_to("extraonegroup", GreenHeroLoc);
+      } else if(unit_group_length("red_unit") > 0){
+      unit_group_attack_to("extraonegroup", RedHeroLoc);
+      } else if(unit_group_length("blue_unit") > 0){
+      unit_group_attack_to("extraonegroup", BlueHeroLoc);
+      } else if(unit_group_length("yellow_unit") > 0){
+      unit_group_attack_to("extraonegroup", YellowHeroLoc);
+      }
+      break;
+     case 4:
+      if(unit_group_length("yellow_unit") > 0){
+      unit_group_attack_to("extraonegroup", YellowHeroLoc);
+      } else if(unit_group_length("red_unit") > 0){
+      unit_group_attack_to("extraonegroup", RedHeroLoc);
+      } else if(unit_group_length("green_unit") > 0){
+      unit_group_attack_to("extraonegroup", GreenHeroLoc);
+      } else if(unit_group_length("blue_unit") > 0){
+      unit_group_attack_to("extraonegroup", BlueHeroLoc);
+      }
+      break;
+   }
+
+    enable_trigger("ExtraUnitSpawnTrigger");
+
+    set_timer("ExtraUnitSpawn", ExtraUnitSpawnTime);
+   }
+
+  trigger LightGroupSpawnTrigger(timer_expired("LightGroupSpawn")) {
+
+  LightGroupSpawnTime = LightGroupSpawnTime-12;
+
+   path_to_choose_topbridge_int = rand_int(0,2);
+
+    switch(path_to_choose_topbridge_int) {
+
+     case 0:
+      topbridge_path = "topbridge_path_middle";
+      break;
+
+     case 1:
+      topbridge_path = "topbridge_path_left";
+      break;
+
+     case 2:
+      topbridge_path = "topbridge_path_right";
+      break;
+      }
+
+      if(num_units(DEATHGOD) < maxunits) {
+
+    fill_unit_group(DEATHGOD, grunt_type, "top_bridge_group", GruntsToSpawn, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "top_bridge_group", JaguarsToSpawn, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "top_bridge_group", SnakesToSpawn, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "top_bridge_group", FightersToSpawn, "top_bridge_loc");
+
+       unit_group_attack_to_along_path("top_bridge_group", topbridge_path);
+
+        clear_unit_group("top_bridge_group"); 
+
+   path_to_choose_bottombridge_int = rand_int(0,2);
+
+    switch(path_to_choose_bottombridge_int) {
+
+     case 0:
+      bottombridge_path = "bottombridge_path_middle";
+      break;
+
+     case 1:
+      bottombridge_path = "bottombridge_path_left";
+      break;
+
+     case 2:
+      bottombridge_path = "bottombridge_path_right";
+      break;
+      }
+    
+    fill_unit_group(DEATHGOD, grunt_type, "bottom_bridge_group", GruntsToSpawn, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "bottom_bridge_group", JaguarsToSpawn, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "bottom_bridge_group", SnakesToSpawn, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "bottom_bridge_group", FightersToSpawn, "bottom_bridge_loc");
+
+       unit_group_attack_to_along_path("bottom_bridge_group", bottombridge_path);
+
+        clear_unit_group("bottom_bridge_group"); 
+
+   path_to_choose_right_top_bridge_int = rand_int(0,1);
+   path_to_choose_right_bottom_bridge_int = rand_int(0,1);
+
+    switch(path_to_choose_right_top_bridge_int) {
+
+     case 0:
+      right_top_bridge_path = "right_top_bridge_path";
+      break;
+
+     case 1:
+      right_top_bridge_path = "right_top_bridge_path1";
+      break;
+      }
+
+    switch(path_to_choose_right_bottom_bridge_int) {
+
+     case 0:
+      right_bottom_bridge_path = "right_bottom_bridge_path";
+      break;
+
+     case 1:
+      right_bottom_bridge_path = "right_bottom_bridge_path1";
+      break;
+    }
+
+    fill_unit_group(DEATHGOD, grunt_type, "right_top_bridge_group", GruntsToSpawn/2, "right_top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "right_top_bridge_group", JaguarsToSpawn/2, "right_top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "right_top_bridge_group", SnakesToSpawn/2, "right_top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "right_top_bridge_group", FightersToSpawn/2, "right_top_bridge_loc");
+
+    fill_unit_group(DEATHGOD, grunt_type, "right_bottom_bridge_group", GruntsToSpawn/2, "right_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "right_bottom_bridge_group", JaguarsToSpawn/2, "right_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "right_bottom_bridge_group", SnakesToSpawn/2, "right_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "right_bottom_bridge_group", FightersToSpawn/2, "right_bottom_bridge_loc");
+
+       unit_group_attack_to_along_path("right_top_bridge_group", right_top_bridge_path);
+       unit_group_attack_to_along_path("right_bottom_bridge_group", right_bottom_bridge_path);
+
+        clear_unit_group("right_top_bridge_group"); 
+        clear_unit_group("right_bottom_bridge_group"); 
+
+    fill_unit_group(DEATHGOD, grunt_type, "left_top_bridge_group", GruntsToSpawn/2, "left_top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "left_top_bridge_group", JaguarsToSpawn/2, "left_top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "left_top_bridge_group", SnakesToSpawn/2, "left_top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "left_top_bridge_group", FightersToSpawn/2, "left_top_bridge_loc");
+
+    fill_unit_group(DEATHGOD, grunt_type, "left_bottom_bridge_group", GruntsToSpawn/2, "left_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "left_bottom_bridge_group", JaguarsToSpawn/2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "left_bottom_bridge_group", SnakesToSpawn/2, "left_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "left_bottom_bridge_group", FightersToSpawn/2, "left_bottom_bridge_loc");
+
+   path_to_choose_left_top_bridge_int = rand_int(0,1);
+   path_to_choose_left_bottom_bridge_int = rand_int(0,1);
+
+    switch(path_to_choose_left_top_bridge_int) {
+
+     case 0:
+      left_top_bridge_path = "left_top_bridge_path";
+      break;
+
+     case 1:
+      left_top_bridge_path = "left_top_bridge_path1";
+      break;
+      }
+
+    switch(path_to_choose_left_bottom_bridge_int) {
+
+     case 0:
+      left_bottom_bridge_path = "left_bottom_bridge_path";
+      break;
+
+     case 1:
+      left_bottom_bridge_path = "left_bottom_bridge_path1";
+      break;
+      }
+
+       unit_group_attack_to_along_path("left_top_bridge_group", left_top_bridge_path);
+       unit_group_attack_to_along_path("left_bottom_bridge_group", left_bottom_bridge_path);
+
+        clear_unit_group("left_top_bridge_group"); 
+        clear_unit_group("left_bottom_bridge_group"); 
+      }
+      
+         enable_trigger("LightGroupSpawnTrigger");
+
+      set_timer("LightGroupSpawn", LightGroupSpawnTime);
+  }
+
+  trigger MediumGroupSpawnTrigger(timer_expired("MediumGroupSpawn")) {
+
+  MediumGroupSpawnTime = MediumGroupSpawnTime-14;
+
+   path_to_choose_topbridge_int = rand_int(0,2);
+
+      if(num_units(DEATHGOD) < maxunits) {
+
+    fill_unit_group(DEATHGOD, grunt_type, "top_bridge_group", GruntsToSpawn+3, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "top_bridge_group", JaguarsToSpawn+2, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "top_bridge_group", SnakesToSpawn, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "top_bridge_group", IdolsToSpawn, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "top_bridge_group", FightersToSpawn+1, "top_bridge_loc");
+
+    switch(path_to_choose_topbridge_int) {
+
+     case 0:
+      topbridge_path = "topbridge_path_middle";
+      break;
+
+     case 1:
+      topbridge_path = "topbridge_path_left";
+      break;
+
+     case 2:
+      topbridge_path = "topbridge_path_right";
+      break;
+      }
+       unit_group_attack_to_along_path("top_bridge_group", topbridge_path);
+
+        clear_unit_group("top_bridge_group"); 
+
+   path_to_choose_bottombridge_int = rand_int(0,2);
+
+    fill_unit_group(DEATHGOD, grunt_type, "bottom_bridge_group", GruntsToSpawn+3, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "bottom_bridge_group", JaguarsToSpawn+2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "bottom_bridge_group", SnakesToSpawn, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "bottom_bridge_group", IdolsToSpawn, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "bottom_bridge_group", FightersToSpawn+1, "bottom_bridge_loc");
+
+    switch(path_to_choose_bottombridge_int) {
+
+     case 0:
+      bottombridge_path = "bottombridge_path_middle";
+      break;
+
+     case 1:
+      bottombridge_path = "bottombridge_path_left";
+      break;
+
+     case 2:
+      bottombridge_path = "bottombridge_path_right";
+      break;
+      }
+
+    fill_unit_group(DEATHGOD, grunt_type, "right_top_bridge_group", GruntsToSpawn/2+3, "right_top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "right_top_bridge_group", JaguarsToSpawn/2+2, "right_top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "right_top_bridge_group", SnakesToSpawn/2, "right_top_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "right_top_bridge_group", IdolsToSpawn, "right_top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "right_top_bridge_group", FightersToSpawn/2+1, "right_top_bridge_loc");
+
+    fill_unit_group(DEATHGOD, grunt_type, "right_bottom_bridge_group", GruntsToSpawn/2+3, "right_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "right_bottom_bridge_group", JaguarsToSpawn/2+2, "right_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "right_bottom_bridge_group", SnakesToSpawn/2, "right_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "right_bottom_bridge_group", IdolsToSpawn, "right_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "right_bottom_bridge_group", FightersToSpawn/2+1, "right_bottom_bridge_loc");
+
+   path_to_choose_right_top_bridge_int = rand_int(0,1);
+   path_to_choose_right_bottom_bridge_int = rand_int(0,1);
+
+    switch(path_to_choose_right_top_bridge_int) {
+
+     case 0:
+      right_top_bridge_path = "right_top_bridge_path";
+      break;
+
+     case 1:
+      right_top_bridge_path = "right_top_bridge_path1";
+      break;
+      }
+
+    switch(path_to_choose_right_bottom_bridge_int) {
+
+     case 0:
+      right_bottom_bridge_path = "right_bottom_bridge_path";
+      break;
+
+     case 1:
+      right_bottom_bridge_path = "right_bottom_bridge_path1";
+      break;
+     }
+
+       unit_group_attack_to_along_path("right_top_bridge_group", right_top_bridge_path);
+       unit_group_attack_to_along_path("right_bottom_bridge_group", right_bottom_bridge_path);
+
+        clear_unit_group("right_top_bridge_group"); 
+        clear_unit_group("right_bottom_bridge_group"); 
+
+    fill_unit_group(DEATHGOD, grunt_type, "left_top_bridge_group", GruntsToSpawn/2+3, "left_top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "left_top_bridge_group", JaguarsToSpawn/2+2, "left_top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "left_top_bridge_group", SnakesToSpawn/2, "left_top_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "left_top_bridge_group", IdolsToSpawn, "left_top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "left_top_bridge_group", FightersToSpawn/2+1, "left_top_bridge_loc");
+
+    fill_unit_group(DEATHGOD, grunt_type, "left_bottom_bridge_group", GruntsToSpawn/2+3, "left_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "left_bottom_bridge_group", JaguarsToSpawn/2+2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "left_bottom_bridge_group", SnakesToSpawn/2, "left_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "left_bottom_bridge_group", IdolsToSpawn, "left_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "left_bottom_bridge_group", FightersToSpawn/2+1, "left_bottom_bridge_loc");
+
+   path_to_choose_left_top_bridge_int = rand_int(0,1);
+   path_to_choose_left_bottom_bridge_int = rand_int(0,1);
+
+    switch(path_to_choose_left_top_bridge_int) {
+
+     case 0:
+      left_top_bridge_path = "left_top_bridge_path";
+      break;
+
+     case 1:
+      left_top_bridge_path = "left_top_bridge_path1";
+      break;
+      }
+
+    switch(path_to_choose_left_bottom_bridge_int) {
+
+     case 0:
+      left_bottom_bridge_path = "left_bottom_bridge_path";
+      break;
+
+     case 1:
+      left_bottom_bridge_path = "left_bottom_bridge_path1";
+      break;
+      }
+
+       unit_group_attack_to_along_path("left_top_bridge_group", left_top_bridge_path);
+       unit_group_attack_to_along_path("left_bottom_bridge_group", left_bottom_bridge_path);
+
+        clear_unit_group("left_top_bridge_group"); 
+        clear_unit_group("left_bottom_bridge_group"); 
+        }
+
+         enable_trigger("MediumGroupSpawnTrigger");
+
+      set_timer("MediumGroupSpawn", MediumGroupSpawnTime);
+  }
+
+  trigger HugeGroupSpawnTrigger(timer_expired("HugeGroupSpawn")) {
+
+  HugeGroupSpawnTime = HugeGroupSpawnTime-16;
+
+   path_to_choose_topbridge_int = rand_int(0,2);
+
+      if(num_units(DEATHGOD) < maxunits) {
+
+    fill_unit_group(DEATHGOD, grunt_type, "top_bridge_group", GruntsToSpawn*2, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "top_bridge_group", JaguarsToSpawn*2, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "top_bridge_group", SnakesToSpawn*2, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "top_bridge_group", IdolsToSpawn+2, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, sphere_type, "top_bridge_group", SpheresToSpawn, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "top_bridge_group", FightersToSpawn*2-2, "top_bridge_loc");
+
+    switch(path_to_choose_topbridge_int) {
+
+     case 0:
+      topbridge_path = "topbridge_path_middle";
+      break;
+
+     case 1:
+      topbridge_path = "topbridge_path_left";
+      break;
+
+     case 2:
+      topbridge_path = "topbridge_path_right";
+      break;
+      }
+       unit_group_attack_to_along_path("top_bridge_group", topbridge_path);
+
+        clear_unit_group("top_bridge_group"); 
+
+   path_to_choose_bottombridge_int = rand_int(0,2);
+
+    fill_unit_group(DEATHGOD, grunt_type, "bottom_bridge_group", GruntsToSpawn*2, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "bottom_bridge_group", JaguarsToSpawn*2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "bottom_bridge_group", SnakesToSpawn*2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "bottom_bridge_group", IdolsToSpawn+2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, sphere_type, "bottom_bridge_group", SpheresToSpawn, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "bottom_bridge_group", FightersToSpawn*2-2, "bottom_bridge_loc");
+
+    switch(path_to_choose_bottombridge_int) {
+
+     case 0:
+      bottombridge_path = "bottombridge_path_middle";
+      break;
+
+     case 1:
+      bottombridge_path = "bottombridge_path_left";
+      break;
+
+     case 2:
+      bottombridge_path = "bottombridge_path_right";
+      break;
+      }
+
+       unit_group_attack_to_along_path("bottom_bridge_group", bottombridge_path);
+
+        clear_unit_group("bottom_bridge_group"); 
+
+    fill_unit_group(DEATHGOD, grunt_type, "right_top_bridge_group", GruntsToSpawn/2*2, "right_top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "right_top_bridge_group", JaguarsToSpawn/2*2, "right_top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "right_top_bridge_group", SnakesToSpawn/2*2, "right_top_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "right_top_bridge_group", IdolsToSpawn+2, "right_top_bridge_loc");
+      fill_unit_group(DEATHGOD, sphere_type, "right_top_bridge_group", SpheresToSpawn, "right_top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "right_top_bridge_group", FightersToSpawn/2+2, "right_top_bridge_loc");
+
+    fill_unit_group(DEATHGOD, grunt_type, "right_bottom_bridge_group", GruntsToSpawn/2*2, "right_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "right_bottom_bridge_group", JaguarsToSpawn/2*2, "right_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "right_bottom_bridge_group", SnakesToSpawn/2*2, "right_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "right_bottom_bridge_group", IdolsToSpawn+2, "right_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, sphere_type, "right_bottom_bridge_group", SpheresToSpawn, "right_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "right_bottom_bridge_group", FightersToSpawn/2+2, "right_bottom_bridge_loc");
+
+   path_to_choose_right_top_bridge_int = rand_int(0,1);
+   path_to_choose_right_bottom_bridge_int = rand_int(0,1);
+
+    switch(path_to_choose_right_top_bridge_int) {
+
+     case 0:
+      right_top_bridge_path = "right_top_bridge_path";
+      break;
+
+     case 1:
+      right_top_bridge_path = "right_top_bridge_path1";
+      break;
+      }
+
+    switch(path_to_choose_right_bottom_bridge_int) {
+
+     case 0:
+      right_bottom_bridge_path = "right_bottom_bridge_path";
+      break;
+
+     case 1:
+      right_bottom_bridge_path = "right_bottom_bridge_path1";
+      break;
+      }
+
+       unit_group_attack_to_along_path("right_top_bridge_group", right_top_bridge_path);
+       unit_group_attack_to_along_path("right_bottom_bridge_group", right_bottom_bridge_path);
+
+        clear_unit_group("right_top_bridge_group"); 
+        clear_unit_group("right_bottom_bridge_group"); 
+
+    fill_unit_group(DEATHGOD, grunt_type, "left_top_bridge_group", GruntsToSpawn/2*2, "left_top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "left_top_bridge_group", JaguarsToSpawn/2*2, "left_top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "left_top_bridge_group", SnakesToSpawn/2*2, "left_top_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "left_top_bridge_group", IdolsToSpawn+2, "left_top_bridge_loc");
+      fill_unit_group(DEATHGOD, sphere_type, "left_top_bridge_group", SpheresToSpawn, "left_top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "left_top_bridge_group", FightersToSpawn/2*2, "left_top_bridge_loc");
+
+    fill_unit_group(DEATHGOD, grunt_type, "left_bottom_bridge_group", GruntsToSpawn/2*2, "left_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "left_bottom_bridge_group", JaguarsToSpawn/2*2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "left_bottom_bridge_group", SnakesToSpawn/2*2, "left_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "left_bottom_bridge_group", IdolsToSpawn+2, "left_bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, sphere_type, "left_bottom_bridge_group", SpheresToSpawn, "left_bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "left_bottom_bridge_group", FightersToSpawn/2*2, "left_bottom_bridge_loc");
+
+   path_to_choose_left_top_bridge_int = rand_int(0,1);
+   path_to_choose_left_bottom_bridge_int = rand_int(0,1);
+
+    switch(path_to_choose_left_top_bridge_int) {
+
+     case 0:
+      left_top_bridge_path = "left_top_bridge_path";
+      break;
+
+     case 1:
+      left_top_bridge_path = "left_top_bridge_path1";
+      break;
+      }
+
+    switch(path_to_choose_left_bottom_bridge_int) {
+
+     case 0:
+      left_bottom_bridge_path = "left_bottom_bridge_path";
+      break;
+
+     case 1:
+      left_bottom_bridge_path = "left_bottom_bridge_path1";
+      break;
+      }
+
+       unit_group_attack_to_along_path("left_top_bridge_group", left_top_bridge_path);
+       unit_group_attack_to_along_path("left_bottom_bridge_group", left_bottom_bridge_path);
+
+        clear_unit_group("left_top_bridge_group"); 
+        clear_unit_group("left_bottom_bridge_group"); 
+        }
+
+         enable_trigger("HugeGroupSpawnTrigger");
+
+      set_timer("HugeGroupSpawn", HugeGroupSpawnTime);
+  }
+
+  trigger GiantGroupSpawnTrigger(timer_expired("GiantGroupSpawn")) {
+
+  GiantGroupSpawnTime = GiantGroupSpawnTime-20;
+
+   path_to_choose_topbridge_int = rand_int(0,2);
+
+      if(num_units(DEATHGOD) < maxunits) {
+
+    fill_unit_group(DEATHGOD, grunt_type, "top_bridge_group", GruntsToSpawn*3, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "top_bridge_group", JaguarsToSpawn*2, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "top_bridge_group", SnakesToSpawn*2, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "top_bridge_group", IdolsToSpawn*2, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, sphere_type, "top_bridge_group", SpheresToSpawn+2, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "top_bridge_group", FightersToSpawn*3, "top_bridge_loc");
+
+    switch(path_to_choose_topbridge_int) {
+
+     case 0:
+      topbridge_path = "topbridge_path_middle";
+      break;
+
+     case 1:
+      topbridge_path = "topbridge_path_left";
+      break;
+
+     case 2:
+      topbridge_path = "topbridge_path_right";
+      break;
+      }
+       unit_group_attack_to_along_path("top_bridge_group", topbridge_path);
+
+        clear_unit_group("top_bridge_group"); 
+
+   path_to_choose_bottombridge_int = rand_int(0,2);
+   int city_cointoss = rand_int(0,5);
+
+    fill_unit_group(DEATHGOD, grunt_type, "bottom_bridge_group", GruntsToSpawn*3, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, jaguar_type, "bottom_bridge_group", JaguarsToSpawn*2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, snake_type, "bottom_bridge_group", SnakesToSpawn*2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, idol_type, "bottom_bridge_group", IdolsToSpawn*2, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, sphere_type, "bottom_bridge_group", SpheresToSpawn+2, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "bottom_bridge_group", FightersToSpawn*3, "bottom_bridge_loc");
+
+    switch(path_to_choose_bottombridge_int) {
+
+     case 0:
+      bottombridge_path = "bottombridge_path_middle";
+      break;
+
+     case 1:
+      bottombridge_path = "bottombridge_path_left";
+      break;
+
+     case 2:
+      bottombridge_path = "bottombridge_path_right";
+      break;
+      }
+
+    switch(city_cointoss) {
+
+     case 0:
+      break;
+
+     case 1:
+      CitiesToSpawn_1 = 1;
+      break;
+
+     case 2:
+      break;
+
+     case 3:
+      CitiesToSpawn_2 = 1;
+      break;
+
+     case 4:
+      break;
+
+     case 5:
+      CitiesToSpawn_1 = 1;
+      CitiesToSpawn_2 = 1;
+      break;
+      }
+
+      fill_unit_group(DEATHGOD, "Cuotl Master Unit", "bottom_bridge_group", CitiesToSpawn_1, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, "Cuotl Master Unit", "top_bridge_group", CitiesToSpawn_2, "top_bridge_loc");
+
+       unit_group_attack_to_along_path("bottom_bridge_group", bottombridge_path);
+        unit_group_attack_to_along_path("top_bridge_group", topbridge_path);
+
+        clear_unit_group("bottom_bridge_group"); 
+        clear_unit_group("top_bridge_group"); 
+        }
+
+         enable_trigger("GiantGroupSpawnTrigger");
+
+      set_timer("GiantGroupSpawn", GiantGroupSpawnTime);
+  }
+
+  trigger AirGroupSpawnTrigger(timer_expired("AirGroupSpawn")) {
+
+   path_to_choose_topbridge_int = rand_int(0,2);
+
+   int FightersRand = rand_int(1,6);
+   int EaglesRand = rand_int(1,5);
+   int DisksRand = rand_int(1,4);
+
+   int ShokRand = rand_int(0,3);
+   int ShokToSpawn = 0;
+   
+    switch(ShokRand) {
+
+     case 0:
+      ShokToSpawn = 1;
+      break;
+
+     case 1:
+      ShokToSpawn = 0;
+      break;
+
+     case 2:
+      ShokToSpawn = 0;
+      break;
+      
+     case 3:
+      ShokToSpawn = 0;
+      break;
+      }   
+   
+    fill_unit_group(DEATHGOD, "Shok, Goddess of storm", "top_bridge_group", ShokToSpawn, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, "Storm Disk", "top_bridge_group", DisksRand, "top_bridge_loc");
+      fill_unit_group(DEATHGOD, "Storm Eagle", "top_bridge_group", EaglesRand, "top_bridge_loc");
+     fill_unit_group(DEATHGOD, fighter_type, "top_bridge_group", FightersRand, "top_bridge_loc");
+
+    switch(path_to_choose_topbridge_int) {
+
+     case 0:
+      topbridge_path = "topbridge_path_middle";
+      break;
+
+     case 1:
+      topbridge_path = "topbridge_path_left";
+      break;
+
+     case 2:
+      topbridge_path = "topbridge_path_right";
+      break;
+      }
+      
+       unit_group_attack_to_along_path("top_bridge_group", topbridge_path);
+
+        clear_unit_group("top_bridge_group"); 
+        
+         SupriseAirGroupSpawnTimer = rand_int(60,900);
+   
+          set_timer("AirGroupSpawn", SupriseAirGroupSpawnTimer);
+
+           enable_trigger("AirGroupSpawnTrigger");
+  }
+
+  trigger XilBossSpawn(timer_expired("XilSpawnTimer")) {
+
+   path_to_choose_topbridge_int = rand_int(0,2);
+      bubble_text_cent_screen("Xil has appeared!");
+      
+   int XilSentinels = 12;
+   int XilJaguars = 6;
+   int XilIdols = 4;
+   
+      unit_group_jump_move("XilGroup", "bottom_bridge_loc", 180);
+      fill_unit_group(DEATHGOD, "Sun Sentinel", "XilDefendersGroup", XilSentinels, "bottom_bridge_loc");
+      fill_unit_group(DEATHGOD, "Sun Boss Jaguar", "XilDefendersGroup", XilJaguars, "bottom_bridge_loc");
+     fill_unit_group(DEATHGOD, "Sun Boss Idol", "XilDefendersGroup", XilIdols, "bottom_bridge_loc");
+  
+           if(unit_group_length("red_unit") > 0) {
+                         unit_group_attack_to("XilGroup", RedHeroLoc);
+                   	  } else if(unit_group_length("blue_unit") > 0) {
+                         unit_group_attack_to("XilGroup", BlueHeroLoc);
+                   	  } else if(unit_group_length("green_unit") > 0) {
+                         unit_group_attack_to("XilGroup", GreenHeroLoc);
+                   	  } else if(unit_group_length("yellow_unit") > 0) {
+                         unit_group_attack_to("XilGroup", YellowHeroLoc);
+                      }
+                  
+
+         //SupriseAirGroupSpawnTimer = rand_int(60,900);
+         unit_group_guard_unit("XilDefendersGroup", "Xil");
+          //set_timer("AirGroupSpawn", SupriseAirGroupSpawnTimer);
+
+           //~ enable_trigger("XilBossSpawn");
+           enable_trigger("XilBossStage1");
+           enable_trigger("XilBossStage2");
+           enable_trigger("XilBossStage3");
+           //enable_trigger("XilBossStage4");
+  }
+
+  trigger XilBossStage1(unit_health("Xil") < 75) {
+
+    unit_cast_at_unit("Mirror Image", "Xil", "Xil");
+  }
+
+  trigger XilBossStage2(unit_health("Xil") < 50) {
+
+    unit_cast_at_unit("Blinding Armor", "Xil", "Xil");
+  }
+
+  trigger XilBossStage3(unit_health("Xil") < 30) {
+
+    unit_cast_at_unit("Burning Beams", "Xil", "Xil");
+  }
+
+  trigger XilBossStage4(unit_health("Xil") < 15) {
+
+    unit_cast_at_unit("Blinding Armor", "Xil", "Xil");
+
+    set_timer("burn", 11);
+    set_timer("clones", 22);
+
+  } 
+
+  trigger (timer_expired("burn")) {
+    unit_cast_at_unit("Burning Beams", "Xil", "Xil");
+  }
+
+  trigger (timer_expired("clones")) {
+    unit_cast_at_unit("Mirror Image", "Xil", "Xil");
+  }
+
+///////////////////////////
+// DEATHGOD DYNAMIC "AI" //
+///////////////////////////
+
+trigger AIMapScan(timer_expired("AIMapScanTimer"))
+{
+
+    int TeamHealth = (RedHeroHealth + BlueHeroHealth + GreenHeroHealth + YellowHeroHealth);
+    Location TargetLoc[] = [ RedHeroLoc, BlueHeroLoc, GreenHeroLoc, YellowHeroLoc ];
+
+    int id = rand_int(0, 3);
+
+    Location DynamicLoc[] = [ "SpawnerLoc1", "SpawnerLoc2", "SpawnerLoc3", "SpawnerLoc4" ];
+
+    UnitGroup seen_unit = find_unit("5", "");
+    UnitGroup unseen_unit;
+    /*if(TeamHealth >= TeamHealth/1.5) { // The Heroes Team is doing good
+
+          unit_group_jump_move("DynamicUnitGroup", DynamicLoc[id], 0);
+          unit_group_attack_to("DynamicUnitGroup", TargetLoc[id]);*/
+
+    for (int i = 0; i < unit_group_length(unseen_unit); i++)
+    {
+
+        Unit curUnit = unit_at_index(unseen_unit, i);
+
+        if ((!is_unit_seen("1", curUnit)) && (!is_unit_seen("2", curUnit)) && (!is_unit_seen("3", curUnit)) && (!is_unit_seen("4", curUnit)))
+        {
+            add_unit_to_group(unseen_unit, curUnit);
+        }
+        else
+        {
+            add_unit_to_group(seen_unit, curUnit);
+        }
+    }
+
+    //for (int i = 0; i < unit_group_length(unseen_unit); i++)
+    //{
+    unit_group_jump_move(unseen_unit, DynamicLoc[id], 0);
+    unit_group_attack_to(unseen_unit, TargetLoc[id]);
+
+    //int groupSize = unit_group_length(unseen_unit);
+
+    set_timer("AIMapScanTimer", 60);
+
+    enable_trigger("AIMapScan");
+    //}
+}
+}
+
+
+void function sf_GameSetup() {
+
+ give_good("1", "Timonium", timonium_to_give);
+ give_good("2", "Timonium", timonium_to_give);
+ give_good("3", "Timonium", timonium_to_give);
+ give_good("4", "Timonium", timonium_to_give);
+
+ give_good("1", "Wealth", wealth_to_give);
+ give_good("2", "Wealth", wealth_to_give);
+ give_good("3", "Wealth", wealth_to_give);
+ give_good("4", "Wealth", wealth_to_give);
+
+  create_building("1","Upgrade Shop", "red_shop_loc");
+  create_building("2","Upgrade Shop", "blue_shop_loc");
+  create_building("3","Upgrade Shop", "green_shop_loc");
+  create_building("4","Upgrade Shop", "yellow_shop_loc");
+
+   destroy_building("unfuuni_settings");
+   destroy_building("funny_settings");
+      
+   building_set_int = rand_int(0,4); // Do a coin toss for a set of buildings we want to create
+
+   phrase_to_say = rand_int(0,4); // Say a cool phrase at the beginning of the game ;)
+
+   SupriseAirGroupSpawnTimer = rand_int(60,900);
+   
+   set_timer("AirGroupSpawn", SupriseAirGroupSpawnTimer);
+   
+    switch(building_set_int) {
+
+     case 0:
+      top_middle_building = "Healing Tower";
+      bottom_middle_building = "Healing Tower";
+      right_middle_building = "Defense Tower Cuotl";
+      left_middle_building = "Defense Tower Cuotl";
+      break;
+
+     case 1:
+      top_middle_building = "Defense Tower Cuotl";
+      bottom_middle_building = "Defense Tower Cuotl";
+      right_middle_building = "Healing Tower";
+      left_middle_building = "Healing Tower";
+      break;
+
+     case 2:
+      top_middle_building = "Healing Tower";
+      bottom_middle_building = "Defense Tower Cuotl";
+      right_middle_building = "Healing Tower";
+      left_middle_building = "Defense Tower Cuotl";
+      break;
+
+     case 3:
+      top_middle_building = "Defense Tower Cuotl";
+      bottom_middle_building = "Healing Tower";
+      right_middle_building = "Defense Tower Cuotl";
+      left_middle_building = "Healing Tower";
+      break;
+
+    /* case 4:
+      top_middle_building = "";
+      bottom_middle_building = "";
+      right_middle_building = "";
+      left_middle_building = "";
+      break;
+
+     case 5:
+      top_middle_building = "";
+      bottom_middle_building = "";
+      right_middle_building = "";
+      left_middle_building = "";
+      break; */
+    }
+
+    switch(phrase_to_say) {
+
+     case 0:
+     say_p0 = true;
+      break;
+
+     case 1:
+     say_p1 = true;
+      break;
+
+     case 2:
+     say_p2 = true;
+      break;
+
+     case 3:
+     say_p3 = true;
+      break;
+
+     case 4:
+     say_p4 = true;
+      break;
+      }
+
+  create_building("5", top_middle_building, "top_middle_loc");
+  create_building("5", bottom_middle_building, "bottom_middle_loc");
+  create_building("5", right_middle_building, "right_middle_loc");
+  create_building("5", left_middle_building, "left_middle_loc");
+  create_building("5", right_middle_building, "right_middle_loc1");
+  create_building("5", left_middle_building, "left_middle_loc1");
+}
+
+void game_callback on_unit_killed (Unit the_unit) {
+
+  Leader damage_leader = unit_get_damage_leader(the_unit);
+
+    Leader the_leader = get_unit_leader(the_unit); 
+
+  UnitType unit_type = get_unit_type(the_unit);
+
+    Object the_object = get_unit_object(the_unit);
+
+   if (unit_type == "Caliph, the Dune Ruler L1" || unit_type == "Caliph, the Dune Ruler L2" || unit_type == "Caliph, the Dune Ruler L3" || unit_type == "Caliph, the Dune Ruler L4" || unit_type == "Caliph, the Dune Ruler L5" || unit_type == "Geovanni, the Vinci Engineer L1" || unit_type == "Geovanni, the Vinci Engineer L2" ||  unit_type == "Geovanni, the Vinci Engineer L3" ||  unit_type == "Geovanni, the Vinci Engineer L4" ||  unit_type == "Geovanni, the Vinci Engineer L5" || unit_type == "Aizat, the Dark Healer L1" || unit_type == "Aizat, the Dark Healer L2" || unit_type == "Aizat, the Dark Healer L3" || unit_type == "Aizat, the Dark Healer L4" || unit_type == "Aizat, the Dark Healer L5" || unit_type == "Francesco, the Edgy Sniper L1" || unit_type == "Francesco, the Edgy Sniper L2" || unit_type == "Francesco, the Edgy Sniper L3" || unit_type == "Francesco, the Edgy Sniper L4" ||  unit_type == "Francesco, the Edgy Sniper L5") {
+
+    give_good(the_leader, "Prototypes", 1);
+
+     if(the_leader == "1") {
+
+       if(red_num_summons == maxsummons) {
+
+         defeated_red = true;
+        }
+
+      } else if(the_leader == "2") {
+
+       if(blue_num_summons == maxsummons) {
+
+         defeated_blue = true;
+        }
+
+      } else if(the_leader == "3") {
+
+       if(green_num_summons == maxsummons) {
+
+         defeated_green = true;
+    }
+
+      } else if(the_leader == "4") {
+
+       if(yellow_num_summons == maxsummons) {
+
+         defeated_yellow = true;
+      }
+     }
+    }
+
+    if (get_unit_type(the_unit) == "Sentinel" || get_unit_type(the_unit) == "Guardian" || get_unit_type(the_unit) == "Defender") {
+
+        Text bubble_text_msg = Text(5 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 5);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if  (get_unit_type(the_unit) == "Sun Jaguar" || get_unit_type(the_unit) == "Veteran Sun Jaguar" || get_unit_type(the_unit) == "Elite Sun Jaguar") {
+
+        Text bubble_text_msg = Text(10 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 10);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if  (get_unit_type(the_unit) == "Death Snake" || get_unit_type(the_unit) == "Veteran Death Snake") {
+
+        Text bubble_text_msg = Text(15 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 15);  
+       give_good(damage_leader, "Research Points", 1);    
+    }
+
+    else if  (get_unit_type(the_unit) == "Greater Idol" || get_unit_type(the_unit) == "Elite Greater Idol") {
+
+        Text bubble_text_msg = Text(30 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 30);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if  (get_unit_type(the_unit) == "Death Sphere") {
+
+        Text bubble_text_msg = Text(50 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 50);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if  (get_unit_type(the_unit) == "Cuotl Master Unit") {
+
+        Text bubble_text_msg = Text(300 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 300);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if  (get_unit_type(the_unit) == "Quetzal" || get_unit_type(the_unit) == "Veteran Quetzal" || get_unit_type(the_unit) == "Elite Quetzal") {
+
+        Text bubble_text_msg = Text(10 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 10);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if  (get_unit_type(the_unit) == "Storm Disk") {
+    
+        Text bubble_text_msg = Text(15+ "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 15);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if  (get_unit_type(the_unit) == "Storm Eagle") {
+    
+        Text bubble_text_msg = Text(20+ "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 20);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if  (get_unit_type(the_unit) == "Shok, Goddess of storm") {
+    
+        Text bubble_text_msg = Text(45+ "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 45);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if (get_unit_type(the_unit) == "Sun Sentinel") {
+
+        Text bubble_text_msg = Text(15 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 15);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if (get_unit_type(the_unit) == "Sun Boss Jaguar") {
+
+        Text bubble_text_msg = Text(25 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 25);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if (get_unit_type(the_unit) == "Sun Boss Idol")  {
+
+        Text bubble_text_msg = Text(45 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);    
+   
+       give_good(damage_leader, "Wealth", 45);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+
+    else if (get_unit_type(the_unit) == "Xil, the Sun God") {
+
+        Text bubble_text_msg = Text(350 + "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg); 
+
+       give_good(damage_leader, "Wealth", 350);   
+       give_good(damage_leader, "Research Points", 1);   
+    }
+}
+
+void game_callback on_unit_trained(Unit the_unit, Leader the_leader, UnitType the_type, Build the_build) {
+
+ UnitType unit_type = get_unit_type(the_unit);
+
+  if ((the_leader == "1") && (unit_type == "Caliph, the Dune Ruler L1" || unit_type == "Caliph, the Dune Ruler L2" || unit_type == "Caliph, the Dune Ruler L3" || unit_type == "Caliph, the Dune Ruler L4" || unit_type == "Caliph, the Dune Ruler L5" || unit_type == "Geovanni, the Vinci Engineer L1" || unit_type == "Geovanni, the Vinci Engineer L2" ||  unit_type == "Geovanni, the Vinci Engineer L3" ||  unit_type == "Geovanni, the Vinci Engineer L4" ||  unit_type == "Geovanni, the Vinci Engineer L5" || unit_type == "Aizat, the Dark Healer L1" || unit_type == "Aizat, the Dark Healer L2" || unit_type == "Aizat, the Dark Healer L3" || unit_type == "Aizat, the Dark Healer L4" || unit_type == "Aizat, the Dark Healer L5" || unit_type == "Francesco, the Edgy Sniper L1" || unit_type == "Francesco, the Edgy Sniper L2" || unit_type == "Francesco, the Edgy Sniper L3" || unit_type == "Francesco, the Edgy Sniper L4" ||  unit_type == "Francesco, the Edgy Sniper L5" )) {
+
+    add_unit_to_group("red_unit", the_unit);
+     
+     red_num_summons++;
+
+  } if ((the_leader == "2") && (unit_type == "Caliph, the Dune Ruler L1" || unit_type == "Caliph, the Dune Ruler L2" || unit_type == "Caliph, the Dune Ruler L3" || unit_type == "Caliph, the Dune Ruler L4" || unit_type == "Caliph, the Dune Ruler L5" || unit_type == "Geovanni, the Vinci Engineer L1" || unit_type == "Geovanni, the Vinci Engineer L2" ||  unit_type == "Geovanni, the Vinci Engineer L3" ||  unit_type == "Geovanni, the Vinci Engineer L4" ||  unit_type == "Geovanni, the Vinci Engineer L5" || unit_type == "Aizat, the Dark Healer L1" || unit_type == "Aizat, the Dark Healer L2" || unit_type == "Aizat, the Dark Healer L3" || unit_type == "Aizat, the Dark Healer L4" || unit_type == "Aizat, the Dark Healer L5" || unit_type == "Francesco, the Edgy Sniper L1" || unit_type == "Francesco, the Edgy Sniper L2" || unit_type == "Francesco, the Edgy Sniper L3" || unit_type == "Francesco, the Edgy Sniper L4" ||  unit_type == "Francesco, the Edgy Sniper L5" )) {
+
+    add_unit_to_group("blue_unit", the_unit);
+
+     blue_num_summons++;
+
+  } if ((the_leader == "3") && (unit_type == "Caliph, the Dune Ruler L1" || unit_type == "Caliph, the Dune Ruler L2" || unit_type == "Caliph, the Dune Ruler L3" || unit_type == "Caliph, the Dune Ruler L4" || unit_type == "Caliph, the Dune Ruler L5" || unit_type == "Geovanni, the Vinci Engineer L1" || unit_type == "Geovanni, the Vinci Engineer L2" ||  unit_type == "Geovanni, the Vinci Engineer L3" ||  unit_type == "Geovanni, the Vinci Engineer L4" ||  unit_type == "Geovanni, the Vinci Engineer L5" || unit_type == "Aizat, the Dark Healer L1" || unit_type == "Aizat, the Dark Healer L2" || unit_type == "Aizat, the Dark Healer L3" || unit_type == "Aizat, the Dark Healer L4" || unit_type == "Aizat, the Dark Healer L5" || unit_type == "Francesco, the Edgy Sniper L1" || unit_type == "Francesco, the Edgy Sniper L2" || unit_type == "Francesco, the Edgy Sniper L3" || unit_type == "Francesco, the Edgy Sniper L4" ||  unit_type == "Francesco, the Edgy Sniper L5" )) {
+
+    add_unit_to_group("green_unit", the_unit);
+
+     green_num_summons++;
+
+  } if ((the_leader == "4") && (unit_type == "Caliph, the Dune Ruler L1" || unit_type == "Caliph, the Dune Ruler L2" || unit_type == "Caliph, the Dune Ruler L3" || unit_type == "Caliph, the Dune Ruler L4" || unit_type == "Caliph, the Dune Ruler L5" || unit_type == "Geovanni, the Vinci Engineer L1" || unit_type == "Geovanni, the Vinci Engineer L2" ||  unit_type == "Geovanni, the Vinci Engineer L3" ||  unit_type == "Geovanni, the Vinci Engineer L4" ||  unit_type == "Geovanni, the Vinci Engineer L5" || unit_type == "Aizat, the Dark Healer L1" || unit_type == "Aizat, the Dark Healer L2" || unit_type == "Aizat, the Dark Healer L3" || unit_type == "Aizat, the Dark Healer L4" || unit_type == "Aizat, the Dark Healer L5" || unit_type == "Francesco, the Edgy Sniper L1" || unit_type == "Francesco, the Edgy Sniper L2" || unit_type == "Francesco, the Edgy Sniper L3" || unit_type == "Francesco, the Edgy Sniper L4" ||  unit_type == "Francesco, the Edgy Sniper L5" )) {
+
+    add_unit_to_group("yellow_unit", the_unit);
+
+     yellow_num_summons++;
+  }
+}
+
+void game_callback on_unit_effected_by_spell (SpellType the_spell, Unit unit_caster, Leader leader_caster, Unit target_unit){
+
+    Object the_object = get_unit_object(unit_caster);
+	
+    if((target_unit == "Caliph, the Dune Ruler L1") || (target_unit == "Caliph, the Dune Ruler L2") || (target_unit == "Caliph, the Dune Ruler L3") || (target_unit == "Caliph, the Dune Ruler L4") || (target_unit == "Caliph, the Dune Ruler L5") || (target_unit == "Francesco, the Edgy Sniper L1") || (target_unit == "Francesco, the Edgy Sniper L2") || (target_unit == "Francesco, the Edgy Sniper L3") || (target_unit == "Francesco, the Edgy Sniper L4") || (target_unit == "Francesco, the Edgy Sniper L5") || (target_unit == "Geovanni, the Vinci Engineer L1") || (target_unit == "Geovanni, the Vinci Engineer L2") || (target_unit == "Geovanni, the Vinci Engineer L3") || (target_unit == "Geovanni, the Vinci Engineer L4") || (target_unit == "Geovanni, the Vinci Engineer L5") || (target_unit == "Aizat, the Dark Healer L1") || (target_unit == "Aizat, the Dark Healer L2") || (target_unit == "Aizat, the Dark Healer L3") || (target_unit == "Aizat, the Dark Healer L4") || (target_unit == "Aizat, the Dark Healer L5")) { 
+    	
+      if((the_spell=="Aizat Augmentation 1") || (the_spell=="Aizat Augmentation 2") || (the_spell=="Aizat Augmentation 3") || (the_spell=="Aizat Augmentation 4")) {
+       
+       give_good(leader_caster, "Wealth", 45);   
+       
+        Text bubble_text_msg = Text(45+ "#ICON2");
+
+         object_add_bubble_text(the_object, bubble_text_msg);   
+ 
+      } else if ((the_spell=="Healing Beam 1") || (the_spell=="Healing Beam 2") || (the_spell=="Healing Beam 3")  || (the_spell=="Healing Beam 4")){
+   
+         give_good(leader_caster, "Wealth", 70);   
+       
+          Text bubble_text_msg = Text(70+ "#ICON2");
+
+           object_add_bubble_text(the_object, bubble_text_msg);   
+      }    
+   }
+}
+
+void ui_callback on_show(string window_id)
+{
+  if (window_id == "resource_win")
+  {
+    button_set_title_id("leader", 1, Text(get_leader_name("1")));
+    button_set_title_id("leader", 2, Text(get_leader_name("2")));
+    button_set_title_id("leader", 3, Text(get_leader_name("3")));
+    button_set_title_id("leader", 4, Text(get_leader_name("4")));
+    sprite_set_color_to_team("fill_sprite", 1, "1");
+    sprite_set_color_to_team("fill_sprite", 2, "2");
+    sprite_set_color_to_team("fill_sprite", 3, "3");
+    sprite_set_color_to_team("fill_sprite", 4, "4");
+  }
+}
+
+void ui_callback on_button_clicked(string window, string but_id, int id_num) {
+  if (window == "resource_win")
+  {
+
+      if (id_num == 1) {
+
+       lock_camera_to_unit(RedHero, 1);
+      select_unit_group("red_unit");
+
+    } else if (id_num == 2) {
+     
+       lock_camera_to_unit(BlueHero, 1);
+      select_unit_group("blue_unit");
+
+    } else if (id_num == 3) {
+
+       lock_camera_to_unit(GreenHero, 1);
+      select_unit_group("green_unit");
+
+    } else if (id_num == 4) {
+
+       lock_camera_to_unit(YellowHero, 1);
+      select_unit_group("yellow_unit");
+  }
+ }
+}
+text ui_callback on_label_set_text_id (string window, string label_id, int id_num, text text_msg) {
+  
+  String lead_str = id_num;
+ 
+   int num = num_type(Leader(lead_str), Type(label_id));
+  
+  return Text(parse(text_msg, String(num)));
+}

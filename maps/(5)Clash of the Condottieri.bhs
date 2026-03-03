@@ -1,0 +1,183 @@
+void game_callback on_game_frame () {
+  
+  Leader RED = "1";
+  Leader GREEN = "3";
+  Leader YELLOW = "4";
+  Leader ORANGE = "6";
+  Leader PURPLE = "7";
+
+  static bool RedIsPlayer = false;
+  static bool GreenIsPlayer = false;
+  static bool YellowIsPlayer = false;
+  static bool OrangeIsPlayer = false;
+
+  labels {
+    PHRASE_TIMER = 15, // Фраза Франческо в секундах.
+    PHRASESEC_TIMER = 22, // Вторая фраза Франческо в секундах.
+    PHRASETHI_TIMER = 30, // Третья фраза Франческо в секундах.
+    PHRASEFOU_TIMER = 34, // Четвёртая фраза Франческо в секундах.
+    FIRST_ECO_BUST_TIMER = 160, // Первый экономический буст в секундах.
+    SECOND_ECO_BUST_TIMER = 520, // Второй экономический буст в секундах.
+    THIRD_ECO_BUST_TIMER = 780, // Третий экономический буст в секундах.
+    FOURTH_ECO_BUST_TIMER = 1080, // Четвертый экономический буст в секундах.
+  }
+
+  run_once {
+	
+   bubble_text_cent_screen("The Clash has begun!");
+   set_base_rate(RED, "wealth", 20);
+   set_base_rate(GREEN, "wealth", 20);
+   set_base_rate(YELLOW, "wealth", 20);
+   set_base_rate(ORANGE, "wealth", 20);
+   set_base_rate(PURPLE, "wealth", 50);
+
+   set_base_rate(RED, "timonium", 20);
+   set_base_rate(GREEN, "timonium", 20);
+   set_base_rate(YELLOW, "timonium", 20);
+   set_base_rate(ORANGE, "timonium", 20);
+   set_base_rate(PURPLE, "timonium", 50);
+
+   diplo_disable(PURPLE);
+
+   //Team One - "Forzians Slaves"
+   make_alliance (RED, GREEN);
+   make_alliance (RED, YELLOW);
+   make_alliance (RED, ORANGE);
+
+   make_alliance (GREEN, RED);
+   make_alliance (GREEN, YELLOW);
+   make_alliance (GREEN, ORANGE);
+
+   make_alliance (YELLOW, RED);
+   make_alliance (YELLOW, ORANGE);
+   make_alliance (YELLOW, GREEN);
+
+    set_commerce_cap(RED, 10000);
+    set_commerce_cap(GREEN, 10000);
+    set_commerce_cap(YELLOW, 10000);
+    set_commerce_cap(ORANGE, 10000);
+    set_commerce_cap(PURPLE, 10000);
+   
+    set_population_cap(PURPLE, 60);
+   
+     set_timer("Phrase", PHRASE_TIMER);
+     set_timer("PhraseSec", PHRASESEC_TIMER);
+     set_timer("PhraseThi", PHRASETHI_TIMER);
+     set_timer("PhraseFou", PHRASEFOU_TIMER);
+     set_timer("FirstEcoBust", FIRST_ECO_BUST_TIMER);
+     set_timer("SecondEcoBust", SECOND_ECO_BUST_TIMER);
+     set_timer("ThirdEcoBust", THIRD_ECO_BUST_TIMER);
+     set_timer("FourthEcoBust", FOURTH_ECO_BUST_TIMER);
+  }
+
+  if(num_buildings(RED) == 0) {
+
+    defeat(RED);
+  }
+
+  if(num_buildings(GREEN) == 0) {
+
+    defeat(GREEN);
+  }
+
+  if(num_buildings(YELLOW) == 0) {
+
+    defeat(YELLOW);
+  }
+
+  if(num_buildings(ORANGE) == 0) {
+
+    defeat(ORANGE);
+  }
+
+
+  if(num_buildings(PURPLE) == 0) {
+
+    defeat(ORANGE);
+  }
+
+  trigger(timer_expired("Phrase")){
+
+   play_music("DomiNation", 0); 
+   add_chat_with_voice("The Forzi are attacking from the camps around the Castle. If we could capture the camps, we could end this war.", PURPLE, "Montuchian Soldier", "Condottieri Soldier", "vc8_condot_11");
+  }
+
+  trigger(timer_expired("PhraseSec")){
+
+   add_chat_with_voice("The Forzi claim ownership to Condottieri Castle, but it's rightfully ours!", PURPLE, "Montuchian Soldier", "Condottieri Soldier", "vc8_condot_12");
+  }
+
+  trigger(timer_expired("PhraseThi")){
+
+   add_chat_with_voice("Our forefathers bought these lands and all that sits upon it. They have no claim to the Castle.", PURPLE, "Montuchian Soldier", "Condottieri Soldier", "vc8_condot_13");
+  }
+
+  trigger(timer_expired("PhraseFou")){
+
+   add_chat_with_voice("Unlike the noble Montuchio, the Forzi are vile dogs, not worthy of residence in the Castle.", PURPLE, "Montuchian Soldier", "Condottieri Soldier", "vc8_condot_14");
+  }
+
+  trigger(timer_expired("FirstEcoBust")){
+  
+   bubble_text_cent_screen("First Economic Bust!");
+   set_base_rate(RED, "wealth", 20);
+   set_base_rate(GREEN, "wealth", 20);
+   set_base_rate(YELLOW, "wealth", 20);
+   set_base_rate(ORANGE, "wealth", 20);
+   set_base_rate(PURPLE, "wealth", 70);
+
+   set_base_rate(RED, "timonium", 20);
+   set_base_rate(GREEN, "timonium", 20);
+   set_base_rate(YELLOW, "timonium", 20);
+   set_base_rate(ORANGE, "timonium", 20);
+   set_base_rate(PURPLE, "timonium", 70);
+  }
+
+  trigger(timer_expired("SecondEcoBust")){
+
+   bubble_text_cent_screen("Second Economic Bust!");
+   set_base_rate(RED, "wealth", 45);
+   set_base_rate(GREEN, "wealth", 45);
+   set_base_rate(YELLOW, "wealth", 45);
+   set_base_rate(ORANGE, "wealth", 45);
+   set_base_rate(PURPLE, "wealth", 90);
+
+   set_base_rate(RED, "timonium", 45);
+   set_base_rate(GREEN, "timonium", 45);
+   set_base_rate(YELLOW, "timonium", 45);
+   set_base_rate(ORANGE, "timonium", 45);
+   set_base_rate(PURPLE, "timonium", 90);
+  }
+
+  trigger(timer_expired("ThirdEcoBust")){
+
+   bubble_text_cent_screen("Third Economic Bust!");
+   set_base_rate(RED, "wealth", 60);
+   set_base_rate(GREEN, "wealth", 60);
+   set_base_rate(YELLOW, "wealth", 60);
+   set_base_rate(ORANGE, "wealth", 60);
+   set_base_rate(PURPLE, "wealth", 110);
+
+   set_base_rate(RED, "timonium", 60);
+   set_base_rate(GREEN, "timonium", 60);
+   set_base_rate(YELLOW, "timonium", 60);
+   set_base_rate(ORANGE, "timonium", 60);
+   set_base_rate(PURPLE, "timonium", 110);
+  }
+
+  trigger(timer_expired("FourthEcoBust")){
+
+   bubble_text_cent_screen("Fourth Economic Bust!");
+   set_base_rate(RED, "wealth", 100);
+   set_base_rate(GREEN, "wealth", 100);
+   set_base_rate(YELLOW, "wealth", 100);
+   set_base_rate(ORANGE, "wealth", 100);
+   set_base_rate(PURPLE, "wealth", 140);
+
+   set_base_rate(RED, "timonium", 100);
+   set_base_rate(GREEN, "timonium", 100);
+   set_base_rate(YELLOW, "timonium", 100);
+   set_base_rate(ORANGE, "timonium", 100);
+   set_base_rate(PURPLE, "timonium", 140);
+  }
+}

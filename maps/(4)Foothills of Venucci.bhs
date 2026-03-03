@@ -1,0 +1,327 @@
+// King of The Hill - ver. 08/03/2025; written by SigemGo (Gmail - sigem.profile@gmail.com) (Discord - @sigemgo)
+// You are free to edit/copy/share or in general do whatever the hell you want with this script. If you want to leave feedback or otherwise contact me, message me via Discord or GMAIL.
+
+// HOW TO MAKE A KING OF THE HILL MAP?
+// 
+// To turn your skirmish map into a KOTH map, you need to first tie this script to your map. In the editor, open Scripting Tool > Script Files, then
+// right-click on the word "Scripts" in the bottom-left window, click "New Script", navigate to Rise of Legends/maps and select King of The Hill.bhs
+// Now, right-click on the "Regions" label in the left-most window, click "New Region" and enter "Hill" (w/o quotation marks). Now, draw this region 
+// to make the actual control area that the players will fight for. If you want it to have a more circular shape, enable the "Oval" checkbox in the
+// bottom window. You can also place a neutral building to represent the hill area better. To do that, simply navigate into the "Buildings" window, 
+// place a new neutral building, left-click the "Buildings" section in the left window, find your hill building in the list below, right-click on it
+// and rename it to "flag" (w/o quotation marks). This buiding will become invulnerable and unselectable. If you want to use the Flag building seen
+// in maps such as (2)Coliseum, (4)Foothills of Venucci and (8)Northern Plains, you'll need to open one of these maps in any text editor capable of
+// editing XML files, copy the entire <TYPES> element (and its contents) from that file and paste it inside your map's file, just below the ROOT 
+// element.
+// 
+// If you want your map to have a custom capture time (time needed to cotrol the point for to win) or custom amounts of resources given as a
+// reward for controlling the hill, you'll need to create Difficulty Variables. To do so, navigate to Scripting Tools > Difficulty Variables,
+// then click on the "Add int" button in the bottom-left window and name your variable according to what piece of data you want to edit.
+// If its capture time, name your variable "captureTime" (w/o quotation marks), if its resource rewards - name your variable timonium_reward
+// or wealth_reward respectively. Once you've named your variable, simply edit difficulty values for it in the right window. For captureTime,
+// its time you want the player to hold the hill for in seconds. For rewards, its the amount of timonium/wealth given every second to the
+// player/team that currently controls the hill. If you don't want to set any custom diff. variables for your map, no worries! The script 
+// will just use the default settings (10 min. capture time, 2 wealth & timonium per second).
+//
+// NOTE: Bots play in a weird manner on KOTH maps. Sometimes, they do try to actively contest the hill, but sometimes they also just do
+// nothing and mass armies at their capital city. I'm not sure why that happenes.
+//
+// NOTE 2: i'm not sure how this script may behave if a player resigns or is defeated when there are more than 2 players present on the
+// map. So far, it seems to work about fine but further testing may be needed. 
+
+bool      function sf_check_superiority(Leader theContester);                                         // Check if the leader or their allies have units in the control point region
+bool      function sf_check_allied_units_in_region(Leader theLeader);                                 // Check if any of the leader's allies have units in the control region
+void      function sf_manage_buffs(Leader theKing);                                                   // Add buffs to the current king and allies, remove buffs from all other, non-king units. Will not work unless you've made a King Buff craft.
+void      function sf_update_timer(Leader theLeader, int localTime, int localPoints, String theName); // Update the timer
+void      function sf_victory(Leader theVictor);                                                      // Declare victory
+void      function sf_is_point_empty();                                                               // Declare the point as neutral if its empty
+String    function sf_convert_to_clock(int time_in_seconds);                                          // Converts seconds to clock format
+UnitGroup function sf_all_units(Leader thisLeader);                                                   // Find all *military* units of this leader
+
+Region controlRegion;            // The "Hill" region. Needs to be manually placed on the map and named "hill"
+Build controlFlag;               // The building used to graphically represent who is the current king
+
+int captureTime = 600;           // Time (in seconds) it takes for the current king of the hill to win
+
+Leader the_king = null;          // Tracks the current king
+
+Leader[] captains;               // Stores team captains for nickname text parsing purposes
+
+Leader[] leaderName;             // Stores all leaders present on the map during the initialization phase
+Leader[] allLeaders;             // Stores all leaders on the map (for alliance checks)
+String[] leaderNickname;         // Stores all leaders' names for updating the scoreboard
+
+int[] leaderTime;                // Stores the time left for each leader to control the hill
+int[] leaderPoints;              // Stores the points for each leader 
+
+int wealth_reward = 2;
+int timonium_reward = 2;
+
+void game_callback on_game_started(int num_players)
+{
+    get_difficulty_data("captureTime", captureTime);
+    get_difficulty_data("wealth_reward", wealth_reward);
+    get_difficulty_data("timonium_reward", timonium_reward);
+
+    if     (captureTime <= 0) captureTime = 600;
+    if   (wealth_reward <= 0) wealth_reward = 2;
+    if (timonium_reward <= 0) timonium_reward = 2;
+
+    for (int i = 0; i < num_players; i++)
+    {
+        Leader currentLeader = get_leader(i);
+        bool allianceExists = false;
+        Leader allianceLeader;
+
+        for (int j = 0; j < leaderName.length; j++) {
+            if (have_alliance(currentLeader, leaderName[j])) {
+                allianceExists = true;
+                allianceLeader = leaderName[j];
+
+                add(captains, allianceLeader);
+                //text teamName = parse("$STR0's Team", get_leader_name(currentLeader));
+                //add(leaderNickname, teamName);
+                break;
+            }
+        }
+
+        if (!allianceExists) { // ? doesn't really seem to do anything, re-evaluate and remove if useless
+            add(leaderName, currentLeader);
+            add(leaderTime, captureTime);
+            add(leaderPoints, 0);
+            add(leaderNickname, get_leader_name(currentLeader));
+
+            scoreboard_add_contestant(currentLeader);
+            scoreboard_set_to_team_color(currentLeader);
+            scoreboard_set_highest_at_top_sort();
+        }
+
+        add(allLeaders, currentLeader);
+    }
+
+    scoreboard_set_title(Text("King of The Hill (None)"));
+    scoreboard_show();
+}
+
+
+void game_callback on_game_frame() {
+    run_once {
+        set_timer("oneSecond", 1);
+        controlRegion = "Hill";
+        controlFlag = "flag";
+
+        give_object_buff(controlFlag, controlFlag, "Bless", -1);
+        give_object_buff(controlFlag, controlFlag, "Plot Object", -1);
+
+        for(int k = 0; k < leaderName.length; k++){
+            Leader localLeader = leaderName[k];
+            String captureTime_String = sf_convert_to_clock(captureTime);
+            Text captureTime_Text = text(captureTime_String);
+            scoreboard_set_score_with_name(localLeader, leaderPoints[k], captureTime_Text);
+            scoreboard_set_to_team_color(localLeader);
+            reveal_region(controlRegion, localLeader);
+        }
+    }
+
+    if (timer_expired("oneSecond")) {
+
+    bool contested = false;
+    Leader currentKing = null;
+
+    int kingIndex = -1;
+
+    for (int k = 0; k < leaderName.length; k++) {
+        Leader localLeader = leaderName[k];
+
+        if ((is_unit_group_in_region(sf_all_units(localLeader), controlRegion) || sf_check_allied_units_in_region(localLeader)) 
+            && sf_check_superiority(localLeader)) 
+        {
+            if (currentKing == null) {
+                currentKing = localLeader;
+                the_king = localLeader;
+                kingIndex = k;
+
+            } else if (!have_alliance(currentKing, localLeader)) { contested = true; }
+
+                building_switch_teams(localLeader, controlFlag);
+                sf_manage_buffs(localLeader);
+        }
+
+    text displayName = get_leader_name(localLeader);
+    if (find(captains, localLeader) >= 0) displayName = parse("$STR0's Team", displayName);
+    if (the_king == localLeader) displayName = parse("$STR0 #ICON47", displayName);
+
+    scoreboard_set_contestant_name(localLeader, displayName);
+    }
+
+    if (!contested && kingIndex != -1) {
+        leaderTime[kingIndex]--;
+        leaderPoints[kingIndex]++;
+        sf_update_timer(leaderName[kingIndex], leaderTime[kingIndex], leaderPoints[kingIndex], leaderNickname[kingIndex]);
+
+        if (leaderPoints[kingIndex] == captureTime) { 
+            sf_victory(leaderName[kingIndex]); 
+        }
+    }
+
+    if (contested) {
+        scoreboard_set_title(Text("King of The Hill (Contested!)"));
+        building_switch_teams("9", controlFlag);
+    }
+
+    sf_is_point_empty();
+
+    set_timer("oneSecond", 1);
+    }
+}
+
+
+bool function sf_check_allied_units_in_region(Leader theLeader)
+{
+    for (int i = 0; i < allLeaders.length; i++) {
+        Leader allianceLeader = allLeaders[i];
+
+        if (have_alliance(theLeader, allianceLeader)) {
+            if (is_unit_group_in_region(sf_all_units(allianceLeader), controlRegion)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+bool function sf_check_superiority(Leader theContester)
+{
+    if (sf_check_allied_units_in_region(theContester)) {
+        return true;
+    }
+
+    for (int i = 0; i < allLeaders.length; i++) {
+        Leader otherLeader = allLeaders[i];
+        if (otherLeader != theContester && !have_alliance(theContester, otherLeader)) {
+            if (is_unit_group_in_region(sf_all_units(otherLeader), controlRegion)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+void function sf_is_point_empty()
+{
+    bool pointIsEmpty = true;
+
+    for (int i = 0; i < allLeaders.length; i++) {
+        Leader currentLeader = allLeaders[i];
+        if (is_unit_group_in_region(sf_all_units(currentLeader), controlRegion)) {
+            pointIsEmpty = false; 
+            break;
+        }
+    }
+
+    if (pointIsEmpty) {
+        scoreboard_set_title(Text("King of The Hill (None)"));
+        building_switch_teams("9", controlFlag);
+
+        the_king = null;
+    }
+}
+
+void function sf_manage_buffs(Leader theKing)
+{
+    for (int i = 0; i < allLeaders.length; i++) {
+        Leader currentLeader = allLeaders[i];
+
+        if (currentLeader == theKing || have_alliance(theKing, currentLeader)) {
+            // King and their allies get the buff
+            UnitGroup allUnits = find_unit(currentLeader, "");
+            for (int j = 0; j < unit_group_length(allUnits); j++) {
+                Unit localUnit = unit_at_index(allUnits, j);
+                if (!object_has_buff(localUnit, "King Buff")) {
+                    give_object_buff(localUnit, localUnit, "King Buff", -1);
+                }
+            }
+        } else {
+            UnitGroup otherUnits = find_unit(currentLeader, "");
+            for (int k = 0; k < unit_group_length(otherUnits); k++) {
+                Unit otherUnit = unit_at_index(otherUnits, k);
+                if (object_has_buff(otherUnit, "King Buff")) {
+                    remove_object_buff(otherUnit, otherUnit, "King Buff");
+                }
+            }
+        }
+    }
+}
+
+void function sf_update_timer(Leader theLeader, int localTime, int localPoints, String theName)
+{
+    String localTime_String = sf_convert_to_clock(localTime);
+    Text localTime_Text = text(localTime_String);
+    Text localTime_kingText = text("#ICON47 " + localTime_Text);
+    Text localTime_finalText;
+
+    scoreboard_set_score_with_name(theLeader, localPoints, localTime_Text);
+
+    for (int i = 0; i < allLeaders.length; i++) {
+        Leader ally = allLeaders[i];
+
+        if (have_alliance(theLeader, ally)) {
+            give_good(ally, "Timonium", timonium_reward);    
+            give_good(ally, "Wealth", wealth_reward); 
+            give_good(ally, "Energy", wealth_reward); 
+        }
+    }
+
+    Text localName = text(theName);
+
+    if (find(captains, theLeader) >= 0 )
+    {
+        localName = parse("$STR0's Team", get_leader_name(theLeader));
+    }
+    else
+    {
+        localName = get_leader_name(theLeader);
+    }
+
+    Text newKing_Text = parse("King of The Hill ($STR0)", localName);
+    scoreboard_set_title(newKing_Text);
+}
+
+
+void function sf_victory(Leader theVictor)
+{
+    for (int i = 0; i < leaderName.length; i++) {
+        Leader allianceLeader = leaderName[i];
+
+        if (have_alliance(theVictor, allianceLeader)) {
+            victory(allianceLeader);
+        } else {
+            defeat(allianceLeader);
+        }
+    }
+}
+
+UnitGroup function sf_all_units(Leader thisLeader){
+    UnitGroup thisGroup;
+    thisGroup = find_all_military(thisLeader);
+    return thisGroup;
+}
+
+String function sf_convert_to_clock(int time_in_seconds)
+{
+    String clock;
+    int seconds;
+    int minutes;
+
+    minutes = time_in_seconds / 60;
+    seconds = time_in_seconds % 60;
+
+    if (seconds > 9) {
+        clock = parse("$s0:$s1", minutes, seconds);
+    } else {
+        clock = parse("$s0:0$s1", minutes, seconds);
+    }
+    return clock;
+}

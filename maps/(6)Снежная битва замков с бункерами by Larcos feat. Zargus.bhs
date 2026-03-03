@@ -1,0 +1,1185 @@
+//===================== Made by Larcos ======================
+void function sf_Spawn(int team_num, BuildType Build_type);
+void function sf_find_a_group(Unit the_unit);
+void function sf_player_num_update();
+int function sf_ObjNum(int team_num, BuildType Build_type);
+int function sf_get_unit_team(Unit the_unit);
+int function sf_unit_hitpoints(Unit the_unit);
+int function sf_give_course(bool drop);
+int function sf_get_combat_center(int team_num);
+bool function sf_unit_in_array(Unit the_unit, UnitType[] unit_array);
+bool function sf_unit_in_unit_group(Unit the_unit, UnitGroup unit_group);
+bool function sf_unit_not_target(Unit the_unit);
+bool function sf_nobuff_array(Unit the_unit, SpellType[] buff_array);
+region[] function sf_battle_regions(int team_num);
+Location function sf_loc_for_burrow(Unit the_unit);
+Leader function sf_color_counter(int team_num, BuildType Build_type);
+UnitGroup function sf_AllUnits_of_team_that_are_in_combat(int team_num);
+UnitGroup function sf_AllUnits_in_team(int team_num);
+Unit function sf_get_target(Unit the_unit, UnitType[] suitable_units, SpellType[] buff_exception, bool inversion, int min_health);
+
+
+UnitType[] ShieldUnits = ["Sentinel", "Sun Jaguar", "Death Snake", "Greater Idol", "Quetzal", "Storm Eagle", "Storm Disk", "Death Sphere"];
+UnitType[] InfantryUnits = ["Condottieri Soldier", "Desert Walker", "Heretic", "Berserker", "Condottieri Dragoon", "Condottieri Knight", "Imperial Musketeer", "Doge Guard MP", "Sentinel", "Dark Walker", "Volley Musketeer", "Doge Guard Volley"];
+UnitType[] SiegeUnits = ["Storm Eagle", "Siege Elephant", "Siege Zeppelin"];
+UnitType[] MediumUnits = ["Clockwork Spider", "Glass Spider Built Poison", "Adult Salamander", "Doge Walker MP", "Scorpion Rider"];
+UnitType[] SmallUnits = ["Sun Jaguar", "Demolition Clockwork Man", "Hybrid Clockwork Man", "Clockwork Man", "Clockwork Sniper", "Lava Spider", "Juvenile Salamander", "Berserker Rider"];
+UnitType[] FlyUnits = ["Fireswarm", "Gun Flyer", "Pirata Flyer", "Quetzal", "Cave Drake"];
+UnitType[] VinciLine = ["Imperial Musketeer", "Doge Guard MP"];
+UnitType[] VinciIgnore = ["Volley Musketeer", "Doge Guard Volley"];
+
+
+SpellType[] SpiderDebuff = ["Web", "Glass Prison Object Spell", "BurrowWeb"];
+SpellType[] NoBuff = ["Invincible Armor"];
+
+region[] static_battle_regions = [];
+UnitGroup First_team_combat_units;
+UnitGroup Second_team_combat_units;
+Location First_team_location;
+Location Second_team_location;
+bool course_flag = 0;
+int global_counter = 0;
+int[] ArrayActive = [0, 0];
+Leader[] Active = ["", "", "", "", "", ""];
+
+int course = -5;//----------------------------------------------------------------------------------------------- delete it
+int[] army_size_test = [-5, -5, -5];
+int test_procent = 0;
+Build test_build;
+string test_string = "123";
+int test_difficult = 0;
+int buildings_type_num = 0;
+int[] test_counter = [];
+int[] test_scope = [];
+region[] test_regions = [];
+int[] test_flag = [];
+int[] test_locations = [0, 0, 0, 0];
+int test_size = -5;
+//Unit[] test_units = [];
+
+void game_callback on_game_frame() {
+  static region[] AllReg = ["YellowR1", "YellowR2", "YellowR3", "YellowR4", "YellowR5", "GreenR5", "GreenR4", "GreenR3", "GreenR2", "GreenR1"];
+  static region[] AllReg2 = ["GreenR1", "GreenR2", "GreenR3", "GreenR4", "GreenR5", "YellowR5", "YellowR4", "YellowR3", "YellowR2", "YellowR1"];
+  static Location[] FirstTeamLoc = ["FirstTeam 11", "FirstTeam 12", "FirstTeam 21", "FirstTeam 22", "FirstTeam 31", "FirstTeam 32"];
+  static Location[] SecondTeamLoc = ["SecondTeam 11", "SecondTeam 12", "SecondTeam 21", "SecondTeam 22", "SecondTeam 31", "SecondTeam 32"];
+  static Leader[] NumL = ["1", "2", "3", "4", "5", "6", "7", "8"];
+  static UnitType[] AllUnits = ["Condottieri Soldier", "Imperial Musketeer", "Doge Guard MP", "Doge Walker MP", "Juggernaut", "Dark Walker", "Glass Golem Poison", "Mega Glass Golem", "Condottieri Dragoon","Condottieri Knight", "Heretic", "Sentinel", "High Priest", "Sun Jaguar", "Death Snake", "Greater Idol", "Moon Gorilla", "Clockwork Man", "Hybrid Clockwork Man", "Demolition Clockwork Man", "Clockwork Spider", "Land Leviathan", "Veteran Fire Scout", "Quetzal", "Storm Eagle", "Storm Disk", "Cuotl Master Unit", "Pirata Flyer", "Gun Flyer", "Air Destroyer", "Siege Zeppelin", "Juvenile Salamander", "Adult Salamander", "Elder Salamander", "Marid", "Berserker", "Berserker Rider", "Siege Elephant", "Heartseeker", "Scorpion Rider", "Sand Horror", "Lava Spider", "Fire Golem", "Burning Cloud Unit", "Glass Spider Built Poison", "Giant Glass Spider", "Afreet", "Fireswarm", "Rukh", "Sand Dragon", "Glass Dragon Start", "Thuran, the Sky Inferno", "Dark Genie", "Death Sphere", "Clockwork Sniper", "Cave Drake", "Desert Walker", "Burrowing Spider"];
+  static BuildType[] AllBuilds = ["Condottieri Soldier 00", "Imperial Musketeer 00", "Doge Guard MP 00", "Doge Walker MP 00", "Juggernaut 00", "Dark Walker 00", "Glass Golem Start 00", "Mega Glass Golem 00", "Condottieri Dragoon 00","Condottieri Knight 00", "Heretic 00", "Sentinel 00", "High Priest 00", "Sun Jaguar 00", "Death Snake 00", "Greater Idol 00", "Moon Gorilla 00", "Clockwork Man 00", "Hybrid Clockwork Man 00", "Demolition Clockwork Man 00", "Clockwork Spider 00", "Land Leviathan 00", "Veteran Fire Scout 00", "Quetzal 00", "Storm Eagle 00", "Storm Disk 00", "Cuotl Master Unit 00", "Pirata Flyer 00", "Gun Flyer 00", "Air Destroyer 00", "Siege Zeppelin 00", "Juvenile Salamander 00", "Adult Salamander 00", "Elder Salamander 00", "Marid 00", "Berserker 00", "Berserker Rider 00", "Siege Elephant 00", "Heartseeker 00", "Scorpion Rider 00", "Sand Horror 00", "Lava Spider 00", "Fire Golem 00", "Burning Cloud Unit 00", "Glass Spider Built Poison 00", "Giant Glass Spider 00", "Afreet 00", "Fireswarm 00", "Rukh 00", "Sand Dragon 00", "Glass Dragon Start 00", "Thuran, the Sky Inferno 00", "Dark Genie 00", "Death Sphere 00", "Clockwork Sniper 00", "Cave Drake 00", "Desert Walker 00", "Burrowing Spider 00"];
+
+  static int counter_reset1[];
+  static int counter_reset2[];
+  static int counter_num_b1[];
+  static int counter_num_b2[];
+  static int counter1[];
+  static int counter2[];
+
+  GLOBALS["AllUnits"] = AllUnits;
+  GLOBALS["AllBuilds"] = AllBuilds;
+
+static Unit[] NotHe;
+static int[] NotHe_kick;
+
+  trigger(1){
+    if(rand_int(0, 100) >= 50)NumL = ["8", "7", "6", "5", "4", "3", "2", "1"];
+    for(int b = 0; b < 58; b++){
+      add(counter_reset1, 90); 
+      add(counter_reset2, 90);
+      add(counter_num_b1, 0);
+      add(counter_num_b2, 0); 
+      add(counter1, 0); 
+      add(counter2, 0); 
+    }
+  }
+
+  static int NumActive = 0;
+  static Leader[] FirstTeam = ["", "", ""];
+  static Leader[] SecondTeam = ["", "", ""];
+  GLOBALS["AllReg"] = AllReg;
+  GLOBALS["AllReg2"] = AllReg2;
+
+  run_once{
+    set_timer("Castle max health timer", 300);
+    set_timer("Test", 5);
+    //show_script_window("LARCOS_DEBUG");
+    dominances_disable();
+    for(int i = 0; i<8; i++){
+     set_commerce_cap(NumL[i],1000);
+     set_population_cap(NumL[i],300);
+     diplo_disable(NumL[i]);
+     research_disable(NumL[i]);
+     remove_all_cooldowns(NumL[i]);
+     set_base_rate(NumL[i], "timonium", -10);
+     if(i < 6)set_explored(FirstTeamLoc[i],(NumL[i]), 200);
+     if(i < 6)set_explored(SecondTeamLoc[i],(NumL[i]), 200);
+     set_explored("Yellow BOOM",(NumL[i]), 200);
+     set_explored("Green BOOM",(NumL[i]), 200);
+     give_good(NumL[i], "Wealth", 50);
+     give_good(NumL[i], "Energy", 50);
+     leader_gain_tech(NumL[i], "Castle Fight Buff");
+    }
+     //enable_type("Castle Fight Buff Bonus");
+     //leader_gain_tech("1", "Castle Fight Buff Bonus");
+    set_timer("counter", 1);
+    set_timer("Fight AI", 1);
+    set_timer("Changing time of day", rand_int(600, 900));
+
+// ====================== Who is Who ========================
+ 
+  for(int a = 0; a < 8; a++){
+    if(leader_is_active(NumL[a])){
+      Active[NumActive] = NumL[a];
+      NumActive++;
+    }
+  }
+  GLOBALS["NumActive"] = NumActive;
+  for(int y = 0, j = 0, g = 0; y < NumActive; y++){
+    if(have_alliance(Active[0],Active[y])){
+      FirstTeam[j] = Active[y];
+      j++;
+    }
+    else{
+      SecondTeam[g] = Active[y];
+      g++;
+    }
+  }
+  for(int p = 0; p < 3; p++){
+    if(leader_is_active(FirstTeam[p])){
+      ArrayActive[0]++;
+    }
+  }
+  for(int s = 0; s < 3; s++){
+    if(leader_is_active(SecondTeam[s])){
+      ArrayActive[1]++;
+    }
+  }
+  GLOBALS["FirstTeamGlobal"] = FirstTeam;
+  GLOBALS["SecondTeamGlobal"] = SecondTeam;
+  GLOBALS["Active"] = Active;
+  GLOBALS["ArrayActive"] = ArrayActive;
+
+    Leader CastleLeader = FirstTeam[rand_int(0, ArrayActive[0])];
+    Leader CastleLeader2 = SecondTeam[rand_int(0, ArrayActive[1])];
+    GLOBALS["CastleLeader"] = CastleLeader;
+    GLOBALS["CastleLeader2"] = CastleLeader2;
+    for(int x = 0; x < NumActive; x++){
+      Build Castle = find_building(Active[x],"Castle for win");
+      BuildGroup Hammer = find_building(Active[x],"Doge's Hammer");
+	  BuildGroup Bunker = find_building(Active[x],"Bunker");
+      if(get_building_leader(Castle) != CastleLeader){
+        destroy_building(Castle);
+        destroy_building(building_at_index(Hammer, 0));
+		destroy_building(building_at_index(Bunker, 1));
+      }
+      Castle = find_building(Active[x],"Castle for win 2");
+      if(get_building_leader(Castle) != CastleLeader2){
+        destroy_building(Castle);
+        destroy_building(building_at_index(Hammer, 1));
+		destroy_building(building_at_index(Bunker, 0));
+      }
+      if(get_building_leader(building_at_index(Hammer, 0)) != CastleLeader2 && get_building_leader(building_at_index(Hammer, 0)) != CastleLeader){
+        destroy_building(building_at_index(Hammer, 0));
+        destroy_building(building_at_index(Hammer, 1));
+		destroy_building(building_at_index(Bunker, 1));
+		destroy_building(building_at_index(Bunker, 0));
+      }
+    }
+
+  switch(ArrayActive[0]){
+    case 1:
+      FirstTeamLoc[0] = FirstTeamLoc[2];
+      FirstTeamLoc[1] = FirstTeamLoc[3];
+      break;
+    case 2:
+      FirstTeamLoc[2] = FirstTeamLoc[4];
+      FirstTeamLoc[3] = FirstTeamLoc[5];
+      break;
+  }
+  switch(ArrayActive[1]){
+    case 1:
+      SecondTeamLoc[0] = SecondTeamLoc[2];
+      SecondTeamLoc[1] = SecondTeamLoc[3];
+      break;
+    case 2:
+      SecondTeamLoc[2] = SecondTeamLoc[4];
+      SecondTeamLoc[3] = SecondTeamLoc[5];
+      break;
+  }
+  for(int k = 0; k < 3; k++){
+    create_building(FirstTeam[k], "Timonium income 1", FirstTeamLoc[k*2]);
+    create_building(FirstTeam[k], "Gold income 1",  FirstTeamLoc[k*2 + 1]);
+    create_building(SecondTeam[k], "Timonium income 1", SecondTeamLoc[k*2]);
+    create_building(SecondTeam[k], "Gold income 1", SecondTeamLoc[k*2 + 1]);
+  }
+}
+// ======================= Victory ==========================
+ int scan, scan2, scan3;
+ Unit the_unit;
+ Unit the_target;
+ UnitType the_unit_type;
+ UnitGroup the_unit_group;
+ region[] BattleRegions;
+ static Build YellowCastle = find_building(GLOBALS["CastleLeader2"], "Castle for win 2");
+ if(building_health(YellowCastle) == 0){
+   for(scan = 0; scan < ArrayActive[0]; scan++){
+     victory(FirstTeam[scan]);
+   }
+ }
+ static Build GreenCastle = find_building(GLOBALS["CastleLeader"], "Castle for win");
+ if(building_health(GreenCastle) == 0){
+   for(scan = 0; scan < ArrayActive[1]; scan++){
+     victory(SecondTeam[scan]);
+   }
+ }
+// =================== Castle max health ===================
+
+  static int CastleHealth = 2000; // Start Health(check \.map)
+  int PlusHealth;
+  if(timer_expired("Castle max health timer")){
+    PlusHealth = object_health(GreenCastle);
+    set_object_type_max_health("Castle for win", CastleHealth + 1000);
+    set_object_health(GreenCastle, PlusHealth);
+    PlusHealth = object_health(YellowCastle);
+    set_object_type_max_health("Castle for win 2", CastleHealth + 1000);
+    set_object_health(YellowCastle, PlusHealth);
+    CastleHealth += 1000;
+    set_timer("Castle max health timer", 60);
+  }
+
+  if(object_has_buff(YellowCastle, "Build Under Attack Spell"))enable_trigger(YellowPlus);
+  trigger YellowPlus(!object_has_buff(YellowCastle, "Build Under Attack Spell") && object_health(YellowCastle) < 100){
+    set_timer("YellowCastle Timer", 2);
+    give_object_buff(YellowCastle,YellowCastle, "Repair", -1);
+  }
+  if(timer_expired("YellowCastle Timer") && !object_has_buff(YellowCastle, "Build Under Attack Spell")){
+    PlusHealth = object_health(YellowCastle) + 1;
+    set_object_health(YellowCastle, PlusHealth);
+    enable_trigger(YellowPlus);
+  }
+  if(object_has_buff(GreenCastle, "Build Under Attack Spell"))enable_trigger(GreenPlus);
+  trigger GreenPlus(!object_has_buff(GreenCastle, "Build Under Attack Spell") && object_health(GreenCastle) < 100){
+    set_timer("GreenCastle Timer", 2);
+    give_object_buff(GreenCastle,GreenCastle, "Repair", -1);
+  }
+  if(timer_expired("GreenCastle Timer") && !object_has_buff(GreenCastle, "Build Under Attack Spell")){
+    PlusHealth = object_health(GreenCastle) + 1;
+    set_object_health(GreenCastle, PlusHealth);
+    enable_trigger(GreenPlus);
+  }
+//===================== Units Spawn =========================
+
+if(timer_expired("counter")){
+  for(scan = 0; scan < 58; scan++){
+    if(sf_ObjNum(1, AllBuilds[scan]) == 0 && counter1[scan] == 0)continue;
+    if(counter_num_b1[scan] == 0 && sf_ObjNum(1, AllBuilds[scan]) != 0){
+      if(counter1[scan] == 0)sf_Spawn(1, AllBuilds[scan]);
+      counter_num_b1[scan] = sf_ObjNum(1, AllBuilds[scan]);
+    }
+    if(counter_num_b1[scan]!=sf_ObjNum(1, AllBuilds[scan])){
+      if(sf_ObjNum(1, AllBuilds[scan]) != 0){
+        counter1[scan] = counter1[scan]*90/counter_reset1[scan]/sf_ObjNum(1, AllBuilds[scan]);
+        counter_reset1[scan]=90/sf_ObjNum(1, AllBuilds[scan]);
+      }
+      counter_num_b1[scan]=sf_ObjNum(1, AllBuilds[scan]);
+    }
+    counter1[scan]++;
+    if(counter1[scan] == counter_reset1[scan]){
+      counter1[scan] = 0;
+      if(sf_ObjNum(1, AllBuilds[scan]) != 0)sf_Spawn(1, AllBuilds[scan]);
+    }
+  }
+  for(scan = 0; scan < 58; scan++){
+    if(sf_ObjNum(2, AllBuilds[scan]) == 0 && counter2[scan] == 0)continue;
+    if(counter_num_b2[scan] == 0 && sf_ObjNum(2, AllBuilds[scan]) != 0){
+      if(counter2[scan] == 0)sf_Spawn(2, AllBuilds[scan]);
+      counter_num_b2[scan] = sf_ObjNum(2, AllBuilds[scan]);
+    }
+    if(counter_num_b2[scan]!=sf_ObjNum(2, AllBuilds[scan])){
+      if(sf_ObjNum(2, AllBuilds[scan]) != 0){
+        counter2[scan] = counter2[scan]*90/counter_reset2[scan]/sf_ObjNum(2, AllBuilds[scan]);
+        counter_reset2[scan]=90/sf_ObjNum(2, AllBuilds[scan]);
+      }
+      counter_num_b2[scan]=sf_ObjNum(2, AllBuilds[scan]);
+    }
+    counter2[scan]++;
+    if(counter2[scan] == counter_reset2[scan]){
+      counter2[scan] = 0;
+      if(sf_ObjNum(2, AllBuilds[scan]) != 0)sf_Spawn(2, AllBuilds[scan]);
+    }
+  }
+
+  set_timer("counter", 1);
+}
+
+// ================ Changing time of day ===================
+
+static int ChangeTime = 0;
+if(timer_expired("Changing time of day")){
+  ChangeTime++;
+  switch (ChangeTime){
+    case 1:
+      set_environment_duration("Desert_Final_night", -1, 300);
+      set_timer("Changing time of day", 600);
+      break;
+    case 2:
+      set_environment_duration("Arctic_Final", -1, 300);
+      set_timer("Changing time of day", 1200);
+      ChangeTime = 0;
+      break;
+  }
+}
+
+// ================= Master Units Buffs =====================
+
+//static int[] Master_units_array1 = [0, 0, 0, 0, 0, 0, 0];
+//static BuildType[] Master_units_builds = ["Moon Gorilla 00", "Mega Glass Golem 00", "Land Leviathan 00", "Cuotl Master Unit 00", "Giant Glass Spider 00", "Glass Dragon Start 00", "Thuran, the Sky Inferno 00"];
+//trigger Moon_Gorilla_trigger1(Master_units_array1[0] > sf_ObjNum(1, "Moon Gorilla 00"))
+//{
+	
+//}
+
+// ===================== FIGHT AI ==========================
+static int current_course;
+if(++global_counter >= 15){
+  global_counter = 0;
+  current_course = sf_give_course(0);
+  course = current_course;
+  sf_player_num_update();
+}
+test_size = leader_is_active("1");
+if(global_counter < 10){
+//BattleRegions = sf_battle_regions(1);
+BattleRegions = static_battle_regions;
+First_team_combat_units = sf_AllUnits_of_team_that_are_in_combat(1);
+Second_team_combat_units = sf_AllUnits_of_team_that_are_in_combat(2);
+First_team_location = unit_group_location(First_team_combat_units);
+Second_team_location = unit_group_location(Second_team_combat_units);
+course_flag = 1;
+army_size_test[0] = unit_group_length(First_team_combat_units);
+army_size_test[1] = unit_group_length(Second_team_combat_units);
+test_locations[0] = location_get_x(First_team_location);
+test_locations[1] = location_get_y(First_team_location);
+test_locations[2] = location_get_x(Second_team_location);
+test_locations[3] = location_get_y(Second_team_location);
+//test_units[0] = unit_at_index(First_team_combat_units, 0);
+//test_units[1] = unit_at_index(Second_team_combat_units, 0);
+//army_size_test = location_get_x(First_team_location);
+for(scan = 0; scan < BattleRegions.length; scan++){
+  switch(global_counter){
+  case 0:
+  for(scan2 = 0; scan2 < unit_group_length("AirD"); scan2++){
+    the_unit = unit_at_index("AirD", scan2);
+    if(unit_can_cast("Barrage", the_unit) && is_unit_in_region(the_unit, BattleRegions[scan])){
+    unit_cast_at_unit("Barrage",the_unit, the_unit);
+    }
+  }
+  break;
+  case 1:
+  for(scan2 = 0; scan2 < unit_group_length("ClockSnipe"); scan2++){
+    the_unit = unit_at_index("ClockSnipe", scan2);
+    if(unit_can_cast("Clockwork Snipe", the_unit) && is_unit_in_region(the_unit, BattleRegions[scan])){
+      the_target = sf_get_target(the_unit, InfantryUnits, NoBuff, 1, 60);     
+      if(the_target != "Worker"){
+        unit_cast_at_unit("Clockwork Snipe",the_unit, the_target);
+      }
+    }
+  }
+  break;
+  case 2:
+  for(scan2 = 0; scan2 < unit_group_length("GlassSpiders"); scan2++){
+    the_unit = unit_at_index("GlassSpiders", scan2);
+    if(unit_can_cast("Glass Web 2", the_unit) && is_unit_in_region(the_unit, BattleRegions[scan])){
+      the_target = sf_get_target(the_unit, InfantryUnits, SpiderDebuff, 0, 100);
+      if(the_target == "Worker")the_target = sf_get_target(the_unit, MediumUnits, SpiderDebuff, 0, 100);
+      if(the_target == "Worker")the_target = sf_get_target(the_unit, SmallUnits, SpiderDebuff, 0, 100); 
+      if(the_target != "Worker"){
+        add(NotHe, the_target);
+        add(NotHe_kick, 0);
+        GLOBALS["NotHe"] = NotHe;
+        unit_cast_at_unit("Glass Web 2",the_unit, the_target);
+      }
+    }
+  }
+  break;
+  case 3:
+  for(scan2 = 0; scan2 < unit_group_length("ClockSpiders"); scan2++){
+    the_unit = unit_at_index("ClockSpiders", scan2);
+    if(unit_can_cast("Web", the_unit) && is_unit_in_region(the_unit, BattleRegions[scan])){
+      the_target = sf_get_target(the_unit, MediumUnits, SpiderDebuff, 0, 100);
+      if(the_target == "Worker")the_target = sf_get_target(the_unit, FlyUnits, SpiderDebuff, 0, 100); 
+      if(the_target == "Worker")the_target = sf_get_target(the_unit, SmallUnits, SpiderDebuff, 0, 100); 
+      if(the_target == "Worker")the_target = sf_get_target(the_unit, InfantryUnits, SpiderDebuff, 0, 100);
+      if(the_target != "Worker"){
+        add(NotHe, the_target);
+        add(NotHe_kick, 0);
+        GLOBALS["NotHe"] = NotHe;
+        unit_cast_at_unit("Web",the_unit, the_target);
+      }
+    }
+  }
+  break;
+  case 4:
+  for(scan2 = 0; scan2 < unit_group_length("BurrowSpiders"); scan2++){
+    the_unit = unit_at_index("BurrowSpiders", scan2);
+    if(unit_can_cast("BurrowWeb", the_unit) && is_unit_in_region(the_unit, BattleRegions[scan])){
+      the_target = sf_get_target(the_unit, MediumUnits, SpiderDebuff, 0, 100);
+      if(the_target == "Worker")the_target = sf_get_target(the_unit, FlyUnits, SpiderDebuff, 0, 100); 
+      if(the_target == "Worker")the_target = sf_get_target(the_unit, SmallUnits, SpiderDebuff, 0, 100); 
+      if(the_target == "Worker")the_target = sf_get_target(the_unit, InfantryUnits, SpiderDebuff, 0, 100);
+      if(the_target != "Worker"){
+        add(NotHe, the_target);
+        add(NotHe_kick, 0);
+        GLOBALS["NotHe"] = NotHe;
+        unit_cast_at_unit("BurrowWeb",the_unit, the_target);
+      }
+    }
+  }
+  break;
+  case 5:
+  for(scan2 = 0; scan2 < unit_group_length("Priests"); scan2++){
+    the_unit = unit_at_index("Priests", scan2);
+    if(unit_can_cast("Personal Shield 1", the_unit) && is_unit_under_attack(the_unit)){
+      unit_cast_at_unit("Personal Shield 1",the_unit, the_unit);
+    }
+    if(unit_can_cast("Planetoid", the_unit) && is_unit_in_region(the_unit, BattleRegions[scan])){
+      int k = 1;
+      switch(sf_get_unit_team(the_unit)){
+        case 1:
+          break;
+        case 2:
+          k = -1;
+          break;
+      }
+      int x = location_get_x(unit_location(the_unit)) + rand_int(10, 24) * k;
+      int y = location_get_y(unit_location(the_unit)) + rand_int(-5, 5);
+      new_location("Priest_cast", x, y);
+      unit_cast_at_location("Planetoid",the_unit, "Priest_cast");
+      delete_location("Priest_cast");
+    }
+  }
+  break;
+  case 6:
+  for(scan2 = 0; scan2 < unit_group_length("GlassGolems"); scan2++){
+    the_unit = unit_at_index("GlassGolems", scan2);
+    if(unit_can_cast("Rupture", the_unit) && is_unit_in_region(the_unit, BattleRegions[scan])){
+      int k = 1;
+      switch(sf_get_unit_team(the_unit)){
+        case 1:
+          break;
+        case 2:
+          k = -1;
+          break;
+      }
+      int enemy_team;
+      if(sf_get_unit_team(the_unit) == 1){enemy_team = 2;
+      }else if(sf_get_unit_team(the_unit) == 2)enemy_team = 1;
+      int x = location_get_x(unit_group_location(sf_AllUnits_of_team_that_are_in_combat(enemy_team))) + rand_int(12, 16) * k;
+      int y;
+      int pow = rand_int(0, 2);
+      if(x > 290 || x < 110){
+        switch (pow){
+          case 0:
+            y = location_get_y(unit_location(the_unit)) + 15 + rand_int(0, 5);
+            break;
+          case 1:
+            y = location_get_y(unit_location(the_unit)) - 15 + rand_int(0, 5);
+            break;
+        }
+      }else
+      { 
+        y = location_get_y(unit_group_location(sf_AllUnits_of_team_that_are_in_combat(enemy_team))) + rand_int(-3, 3);
+      }
+      //int x = location_get_x(unit_location(the_unit)) + rand_int(10, 24) * k;
+      //int y = location_get_y(unit_location(the_unit)) + 15*-1^rand_int(0, 2) + rand_int(0, 5);
+      new_location("MegaGlassGolem_cast", x, y);
+      unit_cast_at_location("Rupture",the_unit, "MegaGlassGolem_cast");
+      delete_location("MegaGlassGolem_cast");
+    }
+  }
+  break;
+}
+}
+
+// --------------- battle regions off ---------------------
+
+switch(global_counter){
+case 99:
+  static int DISTANCE = 10;
+  static int scan_index = 0;
+  static int frame_counter = 0;
+  static int group_x1 = 0;
+  static int group_x2 = 0;
+  if (frame_counter % 3 == 0) {
+    group_x1 = location_get_x(First_team_location);
+    group_x2 = location_get_x(Second_team_location);
+  }
+  int total_units = unit_group_length("VinciUn");
+  if (total_units == 0) break;
+
+  // Обновляем центр боевой группы только раз в 2 кадра
+  if (frame_counter % 2 == 0) {
+    group_x1 = sf_get_combat_center(1);
+    group_x2 = sf_get_combat_center(2);
+  }
+
+  int processed = 0;
+  int viewed = 0;
+  static int MAX_UNITS_PER_FRAME = 1;
+
+  while (processed < MAX_UNITS_PER_FRAME && viewed < total_units) {
+    int index = (scan_index + viewed) % total_units;
+    the_unit = unit_at_index("VinciUn", index);
+    viewed++;
+
+    if (is_unit_in_region(the_unit, "YellowR1") || is_unit_in_region(the_unit, "GreenR1")) {
+      continue;
+    }
+
+    UnitType unit_type = get_unit_type(the_unit);
+    if (unit_type != "Doge Guard MP" && unit_type != "Doge Guard Volley") {
+      continue;
+    }
+
+    int unit_hp = unit_health(the_unit);
+    int team = sf_get_unit_team(the_unit);
+    int group_x = (team == 1) ? group_x1 : group_x2;
+    int unit_x = location_get_x(unit_location(the_unit));
+    int delta_x = absl_int(unit_x - group_x);
+    bool has_volley_buff = object_has_buff(the_unit, "Volley Fire Doge Elite");
+    bool can_cast_loose = unit_can_cast("Loose Order Doge Elite", the_unit);
+    bool can_cast_volley = unit_can_cast("Volley Fire Doge Elite", the_unit);
+    bool can_cast_Assault = unit_can_cast("Assault Doge Elite", the_unit);
+    // Условие для Loose Order
+    if (((unit_hp <= 80 || current_course != team || delta_x > 2 * DISTANCE || current_course == 3) &&
+         has_volley_buff) && can_cast_loose) {
+      add_unit_to_group("Main Group", the_unit);
+      unit_cast_at_group("Volley Fire Doge Elite", the_unit, "VinciUn");
+      clear_unit_group("Main Group");
+      index--;
+      processed++;
+    }
+    // Условие для Volley Fire
+    else if (delta_x < DISTANCE && !has_volley_buff && !is_unit_under_attack(the_unit) &&
+             unit_hp > 80 && current_course == team && can_cast_volley) {
+      add_unit_to_group("Main Group", the_unit);
+      unit_cast_at_group("Volley Fire Doge Elite", the_unit, "VinciUn");
+      clear_unit_group("Main Group");
+      index--;
+      processed++;
+    }
+    test_size++;
+  }
+  scan_index = (scan_index + viewed) % total_units;
+  frame_counter++;  // Увеличиваем счётчик кадров
+  break;
+case 8:
+for(scan = 0; scan < unit_group_length("Shields"); scan++){
+  the_unit = unit_at_index("Shields", scan);
+  if(unit_can_cast("Personal Shield 1", the_unit) && is_unit_under_attack(the_unit)){
+    unit_cast_at_unit("Personal Shield 1",the_unit, the_unit);
+  }
+}
+break;
+case 7:
+for(scan = 0; scan < unit_group_length("SiegeUn"); scan++){
+  the_unit = unit_at_index("SiegeUn", scan);
+  if(sf_get_unit_team(the_unit) == 1 && is_unit_in_region(the_unit, "YellowR1"))unit_attack_building(the_unit, YellowCastle);
+  if(sf_get_unit_team(the_unit) == 2 && is_unit_in_region(the_unit, "GreenR1"))unit_attack_building(the_unit, GreenCastle);
+}
+for(scan = 1; scan < 3; scan++){
+  the_unit_group = sf_AllUnits_in_team(scan);
+  for(scan2 = 0; scan2 < unit_group_length(the_unit_group); scan2++){
+    the_unit = unit_at_index(the_unit_group, scan2);
+    if(sf_unit_in_array(the_unit, VinciIgnore))continue;
+    if(is_unit_idle(the_unit)){
+      add_unit_to_group("Main Group", the_unit);
+      if(sf_get_unit_team(the_unit) == 1){
+        unit_group_attack_to("Main Group", "Yellow BOOM");
+      }
+      if(sf_get_unit_team(the_unit) == 2){
+        unit_group_attack_to("Main Group", "Green BOOM");
+      }
+      clear_unit_group("Main Group");
+    }
+  }
+}
+for(scan = 0; scan < unit_group_length("BurrowSpiders"); scan++){
+  the_unit = unit_at_index("BurrowSpiders", scan);
+  if(unit_can_cast("Spider Burrow", the_unit)){
+    unit_cast_at_location("Spider Burrow",the_unit, sf_loc_for_burrow(the_unit));
+    delete_location("cast_loc");
+  }
+}
+}//switch
+for(scan = 0; scan < NotHe.length; scan++){
+  if(object_has_buff(NotHe[scan], "Glass Prison Object Spell") || object_has_buff(NotHe[scan], "Web")){
+    NotHe_kick[scan] = 1;
+  }
+  if(!object_has_buff(NotHe[scan], "Glass Prison Object Spell") && !object_has_buff(NotHe[scan], "Web") && NotHe_kick[scan] == 1){
+    remove_index(NotHe, scan);
+    remove_index(NotHe_kick, scan);
+  }
+}
+}// FIGHT AI END
+
+if(timer_expired("test"))
+{
+        test_build = find_building_under_construction("1", "Condottieri Soldier 00");
+        if(get_building_type(test_build) == "Condottieri Soldier 00")buildings_type_num = 1;
+	//Location the_loc = create_location(164, 140);
+	//build_building("1", "Condottieri Soldier 00", the_loc);
+	//the_loc = create_location(164, 272);
+	//build_building("1", "Condottieri Soldier 00", the_loc);
+  	//set_timer("test2", 22);
+	test_difficult = get_leader_difficulty("2");
+	set_timer("test", 1);
+}
+
+if(timer_expired("test2"))
+{
+	BuildGroup Test_group;
+	test_build = find_building("1", "Condottieri Soldier 00");
+	upgrade_building(test_build, "Imperial Musketeer 00");
+	test_string = get_type_name(get_building_type(test_build));
+	//static Build Green_Cannon = find_building(GLOBALS["CastleLeader"],"Doge's Hammer");
+	//test_cannon = leader_can_cast("Signal for Cannon", "1");
+	//test_cannon = building_can_cast("Shrapnel Shell", Green_Cannon);
+  	//set_timer("test2", 1);
+}
+}
+
+// =================== FUNCTIONS ========================
+
+void game_callback on_spell_cast(SpellType the_spell, Unit unit_caster, Leader leader_caster, Location target_loc, Unit target_unit, Build target_building) {
+  int scan, scan2;
+  Leader CannonLeader = GLOBALS["CastleLeader"];
+  Leader CannonLeader2 = GLOBALS["CastleLeader2"];
+  static Leader[] FirstTeam = GLOBALS["FirstTeamGlobal"];
+  static Leader[] SecondTeam = GLOBALS["SecondTeamGlobal"];
+  Build Green_Cannon = find_building(CannonLeader,"Doge's Hammer");
+  Build Yellow_Cannon = find_building(CannonLeader2,"Doge's Hammer");
+  if (the_spell == "Signal for Cannon"){
+    for(scan = 0; scan < 3; scan++){
+      if(leader_caster == SecondTeam[scan]){
+        building_cast_at_location("Shrapnel Shell",Yellow_Cannon,"Yellow BOOM");
+      }
+      if(leader_caster == FirstTeam[scan]){
+        building_cast_at_location("Shrapnel Shell",Green_Cannon,"Green BOOM");
+      }
+    }
+  }
+}
+
+void function sf_player_num_update(){
+  static Leader[] FirstTeam = GLOBALS["FirstTeamGlobal"];
+  static Leader[] SecondTeam = GLOBALS["SecondTeamGlobal"];
+  static Leader[] BufferTeam = ["", "", ""];
+  static BuildGroup SwitchBuildings;
+  static Leader Defeat_leader;
+  int scan = 0;
+  int scan2 = 0;
+  for(scan = 0; scan < ArrayActive[0]; scan++){
+    if(!leader_is_active(FirstTeam[scan])){
+      Defeat_leader = FirstTeam[scan];
+      int local_counter = 0;
+      for(scan2 = 0; scan2 < ArrayActive[0]; scan2++){
+        if(leader_is_active(FirstTeam[scan2])){
+          SwitchBuildings = find_building(Defeat_leader, "");
+          build_group_switch_teams(FirstTeam[scan2], SwitchBuildings);
+        }
+      }
+      FirstTeam[scan] = "";
+      GLOBALS["FirstTeamGlobal"] = FirstTeam;
+    }
+  }
+}
+
+int function sf_give_course(bool drop){
+  region[] battle_reg = sf_battle_regions(1);
+  static int retreat_team = 0;
+  static int result = 0;
+  static int changer = 0;
+  static region[] AllReg = GLOBALS["AllReg2"];
+  static int[] counter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // функция вызывается каждую секунду.
+  static int[] flag = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; 
+  int scan, scan2;
+  for(scan = 0; scan < AllReg.length; scan++)
+  {
+    for(scan2 = 0; scan2 < battle_reg.length; scan2++)
+    {
+      if(AllReg[scan] == battle_reg[scan2])
+      {
+        counter[scan] += 2;
+        continue;
+      }
+    }
+    counter[scan]--;
+    if(counter[scan] > 10)
+    {
+      counter[scan] = 10;
+      if(flag[scan] == 0)
+      {
+        add(static_battle_regions, AllReg[scan]);
+        flag[scan] = 1;
+      }
+    }
+    else if(counter[scan] < 0)
+    {
+      counter[scan] = 0;
+      for(scan2 = 0; scan2 < static_battle_regions.length; scan2++)
+      {
+        if(static_battle_regions[scan2] == AllReg[scan] && flag[scan] == 1)
+        {
+          remove_index(static_battle_regions, scan2);
+          flag[scan] = 0;
+          continue;
+        }
+      }
+    }
+  }
+  test_counter = counter;
+  test_flag = flag;
+  test_regions = static_battle_regions;
+  if(drop == 1)retreat_team = 0;
+  if(static_battle_regions.length == 0)return 0;
+  int max = 0, min = 9;
+  static int[] scope = [min, max];
+  for(scan = 0; scan < AllReg.length; scan++){
+    for(scan2 = 0; scan2 < static_battle_regions.length; scan2++)
+    {
+      if(AllReg[scan] == static_battle_regions[scan2])
+      {
+        if(scan < min)min = scan;
+        if(scan > max)max = scan;
+      }
+    }
+  }
+  if(scope[0] < min || scope[1] < max)retreat_team = 2;
+  if(scope[0] > min || scope[1] > max)retreat_team = 1;
+  scope = [min, max];
+  test_scope = scope;
+  if(course_flag == 1)
+  {
+    course_flag = 0;
+    if(retreat_team == 2 && changer > -45)changer--;
+    if(retreat_team == 1 && changer < 45)changer++;
+  }
+  if(changer > -15 && changer < 15)result = 3;
+  if(changer == -45) result = 2;
+  if(changer == 45) result = 1;
+  army_size_test[2] = changer;
+  return result;
+}
+
+Location function sf_loc_for_burrow(Unit the_unit){
+  int k, i, x, y = 200;
+  int j;
+  Leader unit_leader = get_unit_leader(the_unit);
+  int spider_x = location_get_x(unit_location(the_unit));
+  switch(sf_get_unit_team(the_unit)){
+    case 1:
+      x = 290;
+      i = -2;
+      k = 1;
+      j = 110;
+      break;
+    case 2:
+      x = 110;
+      i = 2;
+      k = -1;
+      j = 290;
+      break;
+  }
+  for(;(x - spider_x)*k > 50 && x != j; x += i){
+    new_location("cast_loc", x, y);
+    if(is_location_seen_by("cast_loc", unit_leader)){
+      return "cast_loc";
+    }
+    else{
+      delete_location("cast_loc");
+    }
+  }
+  return "";
+}
+
+int function sf_unit_hitpoints(Unit the_unit){
+  int max_health = unit_max_health(the_unit);
+  int procent = unit_health(the_unit);
+  return (max_health*procent)/100;
+}
+
+void function sf_find_a_group(Unit the_unit){
+  UnitType unit_type = get_unit_type(the_unit);
+  if(unit_type == "Clockwork Sniper"){
+    add_unit_to_group("ClockSnipe", the_unit);
+    return;
+  }
+  if(unit_type == "Air Destroyer"){
+    add_unit_to_group("AirD", the_unit);
+    return;
+  }
+  if(unit_type == "Glass Spider Built Poison"){
+    add_unit_to_group("GlassSpiders", the_unit);
+    return;
+  }
+  if(unit_type == "Clockwork Spider"){
+    add_unit_to_group("ClockSpiders", the_unit);
+    return;
+  }
+  if(unit_type == "Burrowing Spider"){
+    add_unit_to_group("BurrowSpiders", the_unit);
+    return;
+  }
+  if(unit_type == "High Priest"){
+    add_unit_to_group("Priests", the_unit);
+    return;
+  }
+  if(unit_type == "Doge Guard MP"){
+    add_unit_to_group("VinciUn", the_unit);
+    return;
+  }
+  if(unit_type == "Mega Glass Golem"){
+    add_unit_to_group("GlassGolems", the_unit);
+    return;
+  }
+  if(sf_unit_in_array(the_unit, ShieldUnits))add_unit_to_group("Shields", the_unit);
+  if(sf_unit_in_array(the_unit, SiegeUnits))add_unit_to_group("SiegeUn", the_unit);
+}
+
+Unit function sf_get_target(Unit the_unit, UnitType[] suitable_units, SpellType[] buff_exception, bool inversion, int min_health){
+  Unit the_target;
+  UnitGroup All_targets;
+  int scan, scan2;
+  int Unit_team = sf_get_unit_team(the_unit);
+  if(Unit_team == 1)All_targets = sf_AllUnits_in_team(2);
+  if(Unit_team == 2)All_targets = sf_AllUnits_in_team(1);
+  if(unit_group_length(All_targets) == 0)return "Worker";
+  region[] BattleRegions = sf_battle_regions(sf_get_unit_team(the_unit));
+  for(scan = 0; scan < BattleRegions.length; scan++){
+    for(scan2 = 0; scan2 < unit_group_length(All_targets); scan2++){
+      the_target = unit_at_index(All_targets, scan2);
+      if(!is_unit_in_region(the_target, BattleRegions[scan]))continue;
+      if(inversion == false && sf_unit_in_array(the_target, suitable_units) && sf_unit_hitpoints(the_target) >= min_health && sf_nobuff_array(the_target, buff_exception) && !sf_unit_not_target(the_target)){
+        return the_target;
+      }
+      if(inversion == true && !sf_unit_in_array(the_target, suitable_units) && sf_unit_hitpoints(the_target) >= min_health && sf_nobuff_array(the_target, buff_exception) && !sf_unit_not_target(the_target)){
+        return the_target;
+      }
+    }
+  }
+  return "Worker";
+}
+
+bool function sf_unit_in_array(Unit the_unit, UnitType[] unit_array){
+  int scan;
+  for(scan = 0; scan < unit_array.length; scan++){
+    if(get_unit_type(the_unit) == unit_array[scan])return 1;
+  }
+  return 0;
+}
+
+bool function sf_unit_in_unit_group(Unit the_unit, UnitGroup unit_group){
+  int scan;
+  for(scan = 0; scan < unit_group_length(unit_group); scan++){
+    if(the_unit == unit_at_index(unit_group, scan))return 1;
+  }
+  return 0;
+}
+
+bool function sf_unit_not_target(Unit the_unit){
+  Unit[] NotHe = GLOBALS["NotHe"];
+  int scan;
+  for(scan = 0; scan < NotHe.length; scan++){
+    if(the_unit == NotHe[scan])return 1;
+  }
+  return 0;
+}
+
+bool function sf_nobuff_array(Unit the_unit, SpellType[] buff_array){
+  int scan;
+  for(scan = 0; scan < buff_array.length; scan++){
+    if(object_has_buff(the_unit, buff_array[scan]))return 0;
+  }
+  return 1;
+}
+
+region[] function sf_battle_regions(int team_num){
+  region[] AllReg;
+  region[] battle_regions;
+  int scan;
+  switch(team_num){
+    case 1:
+      AllReg = GLOBALS["AllReg2"];
+      break;
+    case 2:
+      AllReg = GLOBALS["AllReg"];
+      break;
+  }
+  for(scan = 0; scan < AllReg.length; scan++){
+    if(is_unit_group_in_region(sf_AllUnits_in_team(1), AllReg[scan]) && is_unit_group_in_region(sf_AllUnits_in_team(2), AllReg[scan]))add(battle_regions, AllReg[scan]);
+  }
+  return battle_regions;
+}
+
+int function sf_get_combat_center(int team_num) {
+  UnitGroup AllUnits;
+  static Leader[] FirstTeam = GLOBALS["FirstTeamGlobal"];
+  static Leader[] SecondTeam = GLOBALS["SecondTeamGlobal"];
+  if (team_num == 1) {
+    AllUnits = find_all_unit(FirstTeam[0], "");
+    find_all_unit(AllUnits, FirstTeam[1], "");
+    find_all_unit(AllUnits, FirstTeam[2], "");
+  } else {
+    AllUnits = find_all_unit(SecondTeam[0], "");
+    find_all_unit(AllUnits, SecondTeam[1], "");
+    find_all_unit(AllUnits, SecondTeam[2], "");
+  }
+
+  int count_all = unit_group_length(AllUnits);
+  int sample_count = (count_all < 10) ? count_all : 10; // ограничиваем 10 юнитами
+  if (sample_count == 0) return 0;
+
+  int total_x = 0;
+  int counted = 0;
+
+  for (int i = 0; i < sample_count; i++) {
+    int index = (i * count_all) / sample_count;
+    Unit the_unit = unit_at_index(AllUnits, index);
+
+    // проверяем: в боевой зоне ли он?
+    for (int r = 0; r < static_battle_regions.length; r++) {
+      if (is_unit_in_region(the_unit, static_battle_regions[r])) {
+        total_x += location_get_x(unit_location(the_unit));
+        counted++;
+        break;
+      }
+    }
+  }
+
+  return (counted > 0) ? total_x / counted : 0;
+}
+
+UnitGroup function sf_AllUnits_of_team_that_are_in_combat(int team_num)
+{
+  Unit the_unit;
+  static Leader[] FirstTeam = GLOBALS["FirstTeamGlobal"];
+  static Leader[] SecondTeam = GLOBALS["SecondTeamGlobal"];
+  UnitGroup AllUnits = sf_AllUnits_in_team(team_num);
+  if(team_num == 1){
+    AllUnits = find_all_unit(FirstTeam[0], "");
+    find_all_unit(AllUnits, FirstTeam[1], "");
+    find_all_unit(AllUnits, FirstTeam[2], "");
+  }
+  if(team_num == 2){
+    AllUnits = find_all_unit(SecondTeam[0], "");
+    find_all_unit(AllUnits, SecondTeam[1], "");
+    find_all_unit(AllUnits, SecondTeam[2], "");
+  } 
+  //UnitGroup Combat_units;
+  //if(team_num == 1)Combat_units = "CombatUnits1";
+  //if(team_num == 2)Combat_units = "CombatUnits2";
+  if(team_num == 1)clear_unit_group("CombatUnits1");
+  if(team_num == 2)clear_unit_group("CombatUnits2");
+  int scan, scan2;
+  if(team_num == 1)
+  {
+    for(scan = 0; scan < unit_group_length(AllUnits); scan++)
+    {
+      the_unit = unit_at_index(AllUnits, scan);
+      for(scan2 = 0; scan2 < static_battle_regions.length; scan2++)
+      {
+        if(is_unit_in_region(the_unit, static_battle_regions[scan2]))
+        {
+          add_unit_to_group("CombatUnits1", the_unit);
+          continue;
+        }
+      }
+    }
+  }
+  if(team_num == 2)
+  {
+    for(scan = 0; scan < unit_group_length(AllUnits); scan++)
+    {
+      the_unit = unit_at_index(AllUnits, scan);
+      for(scan2 = 0; scan2 < static_battle_regions.length; scan2++)
+      {
+        if(is_unit_in_region(the_unit, static_battle_regions[scan2]))
+        {
+          add_unit_to_group("CombatUnits2", the_unit);
+          continue;
+        }
+      }
+    }
+  }
+  if(team_num == 1)return "CombatUnits1";
+  if(team_num == 2)return "CombatUnits2";
+}
+
+UnitGroup function sf_AllUnits_in_team(int team_num){
+  static Leader[] FirstTeam = GLOBALS["FirstTeamGlobal"];
+  static Leader[] SecondTeam = GLOBALS["SecondTeamGlobal"];
+  UnitGroup AllUnits;
+  if(team_num == 1){
+    AllUnits = find_all_unit(FirstTeam[0], "");
+    find_all_unit(AllUnits, FirstTeam[1], "");
+    find_all_unit(AllUnits, FirstTeam[2], "");
+  }
+  if(team_num == 2){
+    AllUnits = find_all_unit(SecondTeam[0], "");
+    find_all_unit(AllUnits, SecondTeam[1], "");
+    find_all_unit(AllUnits, SecondTeam[2], "");
+  }
+  return AllUnits;
+}
+
+int function sf_get_unit_team(Unit the_unit){
+  Leader[] FirstTeam = GLOBALS["FirstTeamGlobal"];
+  Leader[] SecondTeam = GLOBALS["SecondTeamGlobal"];
+  int scan;
+  for(scan = 0; scan < 3; scan++){
+    if(get_unit_leader(the_unit) == FirstTeam[scan])return 1;
+    if(get_unit_leader(the_unit) == SecondTeam[scan])return 2;
+  }
+  return -1;
+}
+
+int function sf_ObjNum(int team_num, BuildType Build_type){
+  int scan;
+  int Num = 0;
+  int[] ActiveP = ArrayActive;
+  Leader[] FirstTeam = GLOBALS["FirstTeamGlobal"];
+  Leader[] SecondTeam = GLOBALS["SecondTeamGlobal"];
+  if(team_num == 1){
+    for(scan = 0; scan < ActiveP[0]; scan++){
+      Num += num_type(FirstTeam[scan], Build_type);
+    }
+  }
+  if(team_num == 2){
+    for(scan = 0; scan < ActiveP[1]; scan++){
+      Num += num_type(SecondTeam[scan], Build_type);
+    }
+  }
+  if(Num > 90)Num = 90;
+  if(Num < 0)Num = 0;
+  return Num;
+}
+
+Leader function sf_color_counter(int team_num, BuildType Build_type){
+  int answer;
+  int scan, scan2, min, max;
+  int procent;
+  int[] num_building = [0, 0, 0];
+  int[] rand = [0, 0, 0];
+  int[] ActiveP = ArrayActive;
+  int before = ActiveP[0];
+  Leader[] Team = GLOBALS["FirstTeamGlobal"];
+  if(team_num == 2){
+    before = ActiveP[1];
+    Team = GLOBALS["SecondTeamGlobal"];
+  }
+  for(scan = 0; scan < before; scan++){
+    num_building[scan] = num_type(Team[scan], Build_type);
+  }
+  procent = num_building[0]+num_building[1]+num_building[2];
+  for(scan = 0; scan < before; scan++){
+    rand[scan] = num_building[scan]*100/procent;
+  }
+  answer = rand_int(0, 101);
+  if(answer > rand[0] + rand[1])return Team[2];
+  if(answer > rand[0])return Team[1];
+  return Team[0];
+}
+
+void function sf_Spawn(int team_num, BuildType Build_type){
+  static Location[] AllLoc = ["Yellow1", "Yellow2", "Yellow3", "Yellow4", "Green1", "Green2", "Green3", "Green4"];
+  static Path[] AllPuth = ["Yellow p1", "Yellow p2", "Yellow p3", "Yellow p4", "Green p1", "Green p2", "Green p3", "Green p4"];
+  static UnitType[] AllUnits = GLOBALS["AllUnits"];
+  static BuildType[] AllBuilds = GLOBALS["AllBuilds"];
+  int SP;
+  int SW;
+  int ActiveP;
+  int t;
+  int k;
+  Leader SpawnPlayer;
+  for(int i = 0; i < 58; i++){
+    if(Build_type == AllBuilds[i]){
+      SW = i;
+      break;
+    }
+  }
+  if(team_num == 1){
+    ActiveP = ArrayActive[0];
+    SpawnPlayer = sf_color_counter(1, Build_type);
+    SP = rand_int(4,8);
+    fill_unit_group(SpawnPlayer, AllUnits[SW], "Main Group", 1, AllLoc[SP]);
+    unit_group_attack_to_along_path("Main Group", AllPuth[SP]);
+    sf_find_a_group(unit_at_index("Main Group", 0));
+    clear_unit_group("Main Group");
+  }
+  else{
+    ActiveP = ArrayActive[1];
+    SpawnPlayer = sf_color_counter(2, Build_type);
+    SP = rand_int(0,4);
+    fill_unit_group(SpawnPlayer, AllUnits[SW], "Main Group", 1, AllLoc[SP]);
+    unit_group_attack_to_along_path("Main Group", AllPuth[SP]);
+    sf_find_a_group(unit_at_index("Main Group", 0));
+    clear_unit_group("Main Group");
+  }
+}
+
+// ============ DEBUG ==========
+
+void ui_callback on_show(string window_id)
+{
+    //if (window_id == "LARCOS_DEBUG")
+    //{
+    	//sprite_set_color_to_team("fill_sprite", 1, "1");
+	//set_script_window_label_text("LARCOS_DEBUG", "LABEL", "Test");
+    //}
+    if (window_id == "scenarioinfo")
+    {
+    	sprite_set_color_to_team("test_sprite", 1, "1");
+	set_script_window_label_text("scenarioinfo", "LABEL", "At this point you can choose whether or not to receive hints about how to conduct advance Vinci research and use air transports.");
+    }
+}
+
+text ui_callback on_label_set_text (String window_id, String id, text label_text) {
+  // Yes you have to do this, believe it or not
+  return label_text;  
+}
+
+text ui_callback on_label_set_text_id(string window, string label_id, int id_num, text text_msg)
+{
+    if (id_num < 1 || id_num > 22)
+    {
+        return "";
+    }
+    switch(id_num){
+      case 1:
+        return Text("course: " + course);
+      case 2:
+        return Text("army_size: " + parse(text_msg, army_size_test));
+      case 3:
+        return Text("Building_choice: " + test_string);
+      case 4:
+        return Text("Player 2 difficult: " + test_difficult);
+      case 5:
+        return Text("Building num: " + buildings_type_num);
+      case 6:
+        leader[] team_k = GLOBALS["FirstTeamGlobal"];
+        return Text("Leaders: " + parse(text_msg, team_k[0]) + " " + parse(text_msg, team_k[1]) + " " +  parse(text_msg, team_k[2]));
+      case 7:
+        return Text("Region counter: " + parse(text_msg, test_counter) + parse(text_msg, test_scope));
+      case 8:
+        return Text("Region flag: " + parse(text_msg, test_flag));
+      case 9:
+        return Text("Locations: " + test_locations[0] + ";" + test_locations[1] + " " + test_locations[2] + ";" + test_locations[3]);
+      case 10:
+        return Text("Size: " + test_size);
+      //case 11:
+        //return Text("Combat groups: " + parse(text_msg,test_units[0]) + " " + parse(text_msg,test_units[1]));
+    }
+    if (label_id == "kills")
+    {
+        return Text(parse(text_msg, num_kills(get_leader(id_num - 1))));
+    }
+}

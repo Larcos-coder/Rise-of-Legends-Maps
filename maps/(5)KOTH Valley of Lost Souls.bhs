@@ -1,0 +1,191 @@
+// King of The Hill
+ 
+bool      function sf_check_superiority(Leader theContester);                                         // Check if this is the only leader that has units in the control point region
+void      function sf_manage_buffs(Leader theKing);                                                   // Add buffs to the curretn king of the hill and remove buffs from all other, non-king units
+void      function sf_update_timer(Leader theLeader, int localTime, int localPoints, String theName); // Update the timer
+void      function sf_victory(Leader theVictor);                                                      // Declare victory
+void      function sf_is_point_empty();                                                               // Declare the point as neutral if its empty
+UnitGroup function sf_all_units(Leader thisLeader);                                                   // Find all *military* units of this leader
+String    function sf_convert_to_clock(int time_in_seconds);                                          // Convert seconds to clock format
+
+Region controlRegion;            // The "Hill" region. Needs to be manually placed on the map and named "controlpoint" for this script to function properly!
+Region Reveal;        
+Leader controllingLeader;        // The leader that currently controls the hill
+Build controlFlag;               // The building used to graphically represent who is in the current king
+
+int captureTime = 600;           // The time it takes for the current king of the hill to win the game (if the point is under their control)
+
+Leader[] leaderName;             // Stores all leaders present on the map during the intialization phase
+String[] leaderNickname;                                            // TEMP: Stores all leaders' names for the update_timer to properly adjust the scoreboard title. Fix with a better solution later
+
+int[] leaderTime;                // Stores the time left for each leader to control the hill. Will default to using captureTime as its time
+int[] leaderPoints;              // Stores the points for each leader. Used for scoreboard graphics
+
+void game_callback on_game_started(int num_players)
+{
+    for (int i = 0; i < num_players; i++)
+    {
+        scoreboard_add_contestant(get_leader(i));
+        scoreboard_set_to_team_color(get_leader(i));
+
+        add(leaderName, get_leader(i));
+
+        add(leaderTime, captureTime);
+        add(leaderPoints, 0);
+
+        add(leaderNickname, get_leader_name(get_leader(i)));
+
+    scoreboard_set_title(Text("King of The Hill (None)"));
+    scoreboard_show();
+    }
+}
+
+void game_callback on_game_frame() {
+
+run_once {
+set_timer("oneSecond", 1);
+controlRegion = "hill";
+controlFlag = "flag";
+Reveal = "reveal";
+
+give_object_buff(controlFlag, controlFlag, "Bless", -1);
+give_object_buff(controlFlag, controlFlag, "Plot Object", -1);
+
+for(int k = 0; k < leaderName.length; k++){
+Leader localLeader = leaderName[k];
+String captureTime_String = sf_convert_to_clock(captureTime);
+Text captureTime_Text = text(captureTime_String);
+scoreboard_set_score_with_name(localLeader, leaderPoints[k], captureTime_Text);
+scoreboard_set_to_team_color(localLeader);
+reveal_region(controlRegion, localLeader);
+}
+}
+
+if(timer_expired("oneSecond")){
+for(int k = 0; k < leaderName.length; k++){
+   Leader localLeader = leaderName[k];
+   if(is_unit_group_in_region(sf_all_units(localLeader), controlRegion) && sf_check_superiority(localLeader)){
+   leaderTime[k]--;
+   leaderPoints[k]++;
+   building_switch_teams(localLeader, controlFlag);
+   sf_update_timer(localLeader, leaderTime[k], leaderPoints[k], leaderNickname[k]);
+   sf_manage_buffs(localLeader);
+   if(leaderPoints[k] == captureTime) { sf_victory(localLeader); }
+   } else if (is_unit_group_in_region(sf_all_units(localLeader), controlRegion) && !sf_check_superiority(localLeader)){
+   scoreboard_set_title(Text("King of The Hill (Contested!)")); 
+   building_switch_teams("9", controlFlag);
+   } else { sf_is_point_empty(); }
+}
+set_timer("oneSecond", 1);
+}
+}
+
+bool function sf_check_superiority(Leader theContester)
+{
+     for (int i = 0; i < leaderName.length; i++) {
+         Leader otherLeader = leaderName[i];
+         if (otherLeader != theContester) {
+            if (is_unit_group_in_region(sf_all_units(otherLeader), controlRegion)) {
+                return false;
+            }
+        }
+    }
+return true;
+}
+
+void function sf_is_point_empty()
+{
+    bool pointIsEmpty = true;
+
+    for (int i = 0; i < leaderName.length; i++) {
+        Leader currentLeader = leaderName[i];
+        if (is_unit_group_in_region(sf_all_units(currentLeader), controlRegion)) {
+            pointIsEmpty = false;
+            break;
+        }
+    }
+    if (pointIsEmpty) {
+        scoreboard_set_title(Text("King of The Hill (None)"));
+        building_switch_teams("9", controlFlag);
+    }
+}
+
+void function sf_manage_buffs(Leader theKing)
+{
+    UnitGroup allUnits = find_unit(theKing, "");
+    for (int j = 0; j < unit_group_length(allUnits); j++) {	
+        Unit localUnit = unit_at_index(allUnits, j);
+        if (!object_has_buff(localUnit, "King Buff")) {
+            give_object_buff(localUnit, localUnit, "King Buff", -1);
+        }
+    }
+
+    for (int i = 0; i < leaderName.length; i++) {
+        Leader otherLeader = leaderName[i];
+
+        if (otherLeader != theKing) { 
+            UnitGroup otherUnits = find_unit(otherLeader, "");
+            for (int k = 0; k < unit_group_length(otherUnits); k++) {
+                Unit otherUnit = unit_at_index(otherUnits, k);
+                if (object_has_buff(otherUnit, "King Buff")) {
+                    remove_object_buff(otherUnit, otherUnit, "King Buff");
+                }
+            }
+        }
+    }
+}
+
+void function sf_update_timer(Leader theLeader, int localTime, int localPoints, String theName)
+{
+    String localTime_String = sf_convert_to_clock(localTime);
+    Text localTime_Text = text(localTime_String);
+    Text localTime_finalText = text("#ICON47 " + localTime_Text);
+
+    scoreboard_set_score_with_name(theLeader, localPoints, localTime_Text);
+
+  give_good(theLeader, "Timonium", 4);    
+  give_good(theLeader, "Wealth", 3); 
+  give_good(theLeader, "Energy", 3); 
+
+Text localName = text(theName);
+Text newKing_Text = parse("King of The Hill ($STR0)", get_leader_name(theLeader));
+scoreboard_set_title(newKing_Text);
+}
+
+void function sf_victory(Leader theVictor)
+{
+victory(theVictor);
+    for (int i = 0; i < leaderName.length; i++) {
+        Leader currentLeader = leaderName[i];
+        if (currentLeader != theVictor) {
+            defeat(currentLeader);
+        }
+    }
+}
+
+UnitGroup function sf_all_units(Leader thisLeader){
+UnitGroup thisGroup;
+
+thisGroup = find_military(thisLeader);
+return thisGroup;
+}
+
+String function sf_convert_to_clock(int time_in_seconds)
+{
+    String clock;
+    int seconds;
+    int minutes;
+
+    minutes = time_in_seconds / 60;
+    seconds = time_in_seconds % 60;
+
+    if (seconds > 9)
+    {
+        clock = parse("$s0:$s1", minutes, seconds);
+    }
+    else
+    {
+        clock = parse("$s0:0$s1", minutes, seconds);
+    }
+    return clock;
+}

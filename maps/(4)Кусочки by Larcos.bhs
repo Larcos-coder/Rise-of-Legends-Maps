@@ -1,0 +1,454 @@
+
+//===================== Made by Larcos ======================
+void function sf_MobSpawn(UnitType the_unit, Location Loc, Path the_path, int Num);
+
+void game_callback on_game_frame() {
+
+static int EasyMode = 0;
+static int MediumMode = 0;
+static int HardMode = 0;
+static bool EasyM = false;
+static bool MediumM = false;
+static bool HardM = false;
+static int PlusTime = 0;
+static int MinusNum = 0;
+
+static path[] AttackPath = ["Left p", "Center blue p", "Center red p", "Center yellow p", "Right p"];
+static Location[] AttackLoc = ["Left", "Center blue", "Center red", "Center yellow", "Right"];
+
+static UnitType DarkWalker = "Dark Walker upgr";
+static UnitType DarkHeartseeker = "Glass Heartseeker upgr";
+static UnitType DarkScorpion = "Glass Scorpion upgr";
+static UnitType DarkSpider = "Glass Spider Built Poison";
+static UnitType DarkCannon = "Glass Cannon Poison";
+static UnitType DarkGolem = "Glass Golem Poison";
+static UnitType MegaGolem = "Mega Glass Golem";
+static UnitType DarkDragon = "Elder Glass Dragon";
+run_once {
+  make_alliance ("1", "2");
+  make_alliance ("1", "3");
+  make_alliance ("2", "3");
+  disable_city_defeat("7");
+  set_timer("ChangeMode",60);
+  set_timer("Patrol", 600);
+  building_construction_disable("1");
+  building_construction_disable("2");
+  building_construction_disable("3");
+  building_construction_disable("7");
+  research_disable("1");
+  research_disable("2");
+  research_disable("3");
+  research_disable("7");
+  diplo_disable("1");
+  diplo_disable("2");
+  diplo_disable("3");
+  diplo_disable("7");
+}
+
+////////////////////WHICH MODE/////////////////////
+trigger RedPlayerEasy(num_type("1", "Easy mode") > 0){
+  EasyMode++;
+}
+trigger RedPlayerMedium(num_type("1", "Medium mode") > 0){
+  MediumMode++;
+}
+trigger RedPlayerHard(num_type("1", "Hard mode") > 0){
+  HardMode++;
+}
+trigger BluePlayerEasy(num_type("2", "Easy mode") > 0){
+  EasyMode++;
+}
+trigger BluePlayerMedium(num_type("2", "Medium mode") > 0){
+  MediumMode++;
+}
+trigger BluePlayerHard(num_type("2", "Hard mode") > 0){
+  HardMode++;
+}
+trigger YellowPlayerEasy(num_type("3", "Easy mode") > 0){
+  EasyMode++;
+}
+trigger YellowPlayerMedium(num_type("3", "Medium mode") > 0){
+  MediumMode++;
+}
+trigger YellowPlayerHard(num_type("3", "Hard mode") > 0){
+  HardMode++;
+}
+
+trigger EasyModeChange(EasyMode >= 2){
+  EasyM = true;
+  set_timer("Start",540);
+  PlusTime = 5;
+  MinusNum = 2;
+  DarkWalker = "Dark Walker";
+  DarkHeartseeker = "Glass Heartseeker";
+  DarkScorpion = "Glass Scorpion";
+  DarkSpider = "Glass Spider Built";
+  DarkCannon = "Glass Cannon";
+  DarkGolem = "Glass Golem Start";
+  DarkDragon = "Glass Dragon Start";
+  set_timer("Victory",2700);
+  start_cast_timer("Victory_timer");
+}
+trigger MediumModeChange(MediumMode >= 2 || EasyMode == 1 && MediumMode == 1 && HardMode == 1){
+  MediumM = true;
+  PlusTime = 3;
+  MinusNum = 1;
+  set_timer("Start", 480);
+  set_timer("Victory",2700);
+  start_cast_timer("Victory_timer");
+}
+trigger HardModeChange(HardMode >= 2){
+  HardM = true;
+  set_timer("Start", 420);
+  set_timer("Victory",2700);
+  start_cast_timer("Victory_timer");
+}
+if(EasyM == false || MediumM == false || HardM == false){
+  if(timer_expired("ChangeMode")){
+    MediumM = true;
+  }
+}
+trigger StartUp(EasyM == true || MediumM == true || HardM == true){
+  BuildGroup RedBuild = find_building("1","");
+  BuildGroup BlueBuild = find_building("2","");
+  BuildGroup YellowBuild = find_building("3","");
+  destroy_build_group(RedBuild);
+  destroy_build_group(BlueBuild);
+  destroy_build_group(YellowBuild);
+  create_building("1","Observatory123", "RedObs");
+  create_building("2","Observatory123", "BlueObs");
+  create_building("3","Observatory123", "YellowObs");
+  create_building("1","City", "RedCity");
+  create_building("2","City", "BlueCity");
+  create_building("3","City", "YellowCity");
+  create_building("1","Trade Mission", "RedLab");
+  create_building("2","Trade Mission", "BlueLab");
+  create_building("3","Trade Mission", "YellowLab");
+  create_building("1","Vinci Mine", "RedMine");
+  create_building("2","Vinci Mine", "BlueMine");
+  create_building("3","Vinci Mine", "YellowMine");
+  fill_unit_group("1","Worker", "Attack Group", 5, "RedMiners");
+  fill_unit_group("2","Worker", "Attack Group", 5, "BlueMiners");
+  fill_unit_group("3","Worker", "Attack Group", 5, "YellowMiners");
+  fill_unit_group("1","Imperial Musketeer", "Attack Group", 2, "RedArmy");
+  fill_unit_group("2","Imperial Musketeer", "Attack Group", 2, "BlueArmy");
+  fill_unit_group("3","Imperial Musketeer", "Attack Group", 2, "YellowArmy");
+  fill_unit_group("1","Scout Flyer", "Attack Group", 1, "RedArmy");
+  fill_unit_group("2","Scout Flyer", "Attack Group", 1, "BlueArmy");
+  fill_unit_group("3","Scout Flyer", "Attack Group", 1, "YellowArmy");
+  clear_unit_group("Attack Group");
+  building_construction_enable("1");
+  building_construction_enable("2");
+  building_construction_enable("3");
+  research_enable("1");
+  research_enable("2");
+  research_enable("3");
+  diplo_enable("1");
+  diplo_enable("2");
+  diplo_enable("3");
+}
+if(timer_expired("Start")){
+  for(int i = 1; i < 4; i++){
+    sf_MobSpawn(DarkWalker, AttackLoc[i], AttackPath[i], 2);
+  }
+  set_timer("Wave2", 120 + PlusTime*5);
+}
+if(timer_expired("Wave2")){
+  for(int i = 1; i < 4; i++){
+    sf_MobSpawn(DarkWalker, AttackLoc[i], AttackPath[i], 5 - MinusNum);
+    sf_MobSpawn("Marid", AttackLoc[i], AttackPath[i], 1);
+    sf_MobSpawn(DarkHeartseeker, AttackLoc[i], AttackPath[i], 1);
+  }
+  set_timer("Wave3", 80 + PlusTime*5);
+}
+if(timer_expired("Wave3")){
+  for(int i = 1; i < 4; i++){
+    sf_MobSpawn(DarkWalker, AttackLoc[i], AttackPath[i], 6 - MinusNum);
+    sf_MobSpawn("Marid", AttackLoc[i], AttackPath[i], 2 - MinusNum);
+    sf_MobSpawn(DarkHeartseeker, AttackLoc[i], AttackPath[i], 2 - MinusNum);
+    sf_MobSpawn(DarkScorpion, AttackLoc[i], AttackPath[i], 1 - MinusNum);
+  }
+  set_timer("Wave4", 40 + PlusTime*5);
+}
+
+
+/////////////////////////////////////////////////////////////
+
+
+static int WalkerTime = 0;
+static int WalkerTime2 = 0;
+static int MaridTime = 0;
+static int MaridTime2 = 0;
+static int HeartseekerTime = 0;
+static int HeartseekerTime2 = 0;
+static int ScorpionTime = 0;
+static int ScorpionTime2 = 0;
+static int SpiderTime = 0;
+static int SpiderTime2 = 0;
+static int CannonTime = 0;
+static int CannonTime2 = 0;
+static int GolemTime = 0;
+static int GolemTime2 = 0;
+static int MegaGolemTime = 0;
+static int MegaGolemTime2 = 0;
+static int DragonTime = 0;
+static int DragonTime2 = 0;
+static int MegaSpiderTime = 0;
+static int MegaSpiderTime2 = 0;
+static int rage = 1;
+
+if(timer_expired("Wave4")){
+  if(HardM == true)sf_MobSpawn(MegaGolem, AttackLoc[2], AttackPath[2], 1);
+  set_timer("Walkers", 1);
+  set_timer("Marids", 2);
+  set_timer("Heartseekers", 3);
+  set_timer("Scorpions", 5);
+  set_timer("Spiders", 10);
+  set_timer("Cannons", 240);
+  set_timer("Golems", 180);
+  set_timer("MegaGolems", 740);
+  set_timer("Dragons", 1440);
+  set_timer("MegaSpiders", 1180);
+  set_timer("GlassHorror", 160);
+  set_timer("Rage", 360);
+}
+
+if(timer_expired("Rage")){
+  rage = 0;
+}
+
+if (timer_expired("Victory")){
+  victory("1");
+  victory("2");
+  victory("3");
+}
+
+if(timer_expired("Patrol")){
+  set_timer("Patrol", 90);
+  if(num_cities("1") + num_cities("2") + num_cities("3") < 4){
+    sf_MobSpawn(DarkWalker, "Left", "Left p", 5 - MinusNum);
+    sf_MobSpawn(DarkWalker, "Right", "Right p", 5 - MinusNum);
+  }
+}
+
+if(timer_expired("Walkers")){
+  WalkerTime2++;
+  if(WalkerTime2 == 4){
+    WalkerTime++;
+    WalkerTime2 = 0;
+  }
+  if(WalkerTime > 15)WalkerTime = 15;
+  for(int i = rage; i < 5 - rage; i++){
+    sf_MobSpawn(DarkWalker, AttackLoc[i], AttackPath[i], 5 - MinusNum);
+  }
+  set_timer("Walkers", 45 + PlusTime - WalkerTime);
+}
+
+if(timer_expired("Marids")){
+  MaridTime2++;
+  if(MaridTime2 == 4){
+    MaridTime += 2;
+    MaridTime2 = 0;
+  }
+  if(MaridTime > 15)MaridTime = 15;
+  for(int i = rage; i < 5 - rage; i++){
+    int MaridNum = MinusNum;
+    if(HardM == false)MaridNum--;
+    sf_MobSpawn("Marid", AttackLoc[i], AttackPath[i], 2 - MaridNum);
+  }
+  set_timer("Marids", 50 + PlusTime - MaridTime);
+}
+
+if(timer_expired("Heartseekers")){
+  HeartseekerTime2++;
+  if(HeartseekerTime2 == 4){
+    HeartseekerTime++;
+    HeartseekerTime2 = 0;
+  }
+  if(HeartseekerTime > 15)HeartseekerTime = 15;
+  for(int i = rage; i < 5 - rage; i++){
+    int HeartNum = MinusNum;
+    if(HardM == false)HeartNum--; 
+    sf_MobSpawn(DarkHeartseeker, AttackLoc[i], AttackPath[i], 2 - HeartNum);
+  }
+  set_timer("Heartseekers", 45 + PlusTime - HeartseekerTime);
+}
+
+if(timer_expired("Scorpions")){
+  ScorpionTime2++;
+  if(ScorpionTime2 == 5){
+    ScorpionTime += 2;
+    ScorpionTime2 = 0;
+  }
+  if(ScorpionTime > 15)ScorpionTime = 15;
+  for(int i = rage; i < 5 - rage; i++){
+    sf_MobSpawn(DarkScorpion, AttackLoc[i], AttackPath[i], 1);
+  }
+  set_timer("Scorpions", 55 + PlusTime - ScorpionTime);
+}
+
+if(timer_expired("Spiders")){
+  SpiderTime2++;
+  if(SpiderTime2 == 5){
+    SpiderTime += 2;
+    SpiderTime2 = 0;
+  }
+  if(SpiderTime > 20)SpiderTime = 20;
+  for(int i = rage; i < 5 - rage; i++){
+    sf_MobSpawn(DarkSpider, AttackLoc[i], AttackPath[i], 1);
+  }
+  set_timer("Spiders", 60 + PlusTime*2 - SpiderTime);
+}
+
+if(timer_expired("Cannons")){
+  CannonTime2++;
+  if(CannonTime2 == 3){
+    CannonTime += 2;
+    CannonTime2 = 0;
+  }
+  if(CannonTime > 20)CannonTime = 20;
+  for(int i = rage; i < 5 - rage; i++){
+    if(i == 2)i++;
+    sf_MobSpawn(DarkCannon, AttackLoc[i], AttackPath[i], 1);
+  }
+  set_timer("Cannons", 80 + PlusTime*2 - CannonTime);
+}
+
+if(timer_expired("Golems")){
+  GolemTime2++;
+  if(GolemTime2 == 3){
+    GolemTime++;
+    GolemTime2 = 0;
+  }
+  if(GolemTime > 15)GolemTime = 15;
+  for(int i = rage; i < 5 - rage; i++){
+    sf_MobSpawn(DarkGolem, AttackLoc[i], AttackPath[i], 1);
+  }
+  set_timer("Golems", 70 + PlusTime*2 - GolemTime);
+}
+
+if(timer_expired("MegaGolems")){
+  MegaGolemTime2++;
+  if(MegaGolemTime2 == 3){
+    MegaGolemTime += 15;
+    MegaGolemTime2 = 0;
+  }
+  if(MegaGolemTime > 80)MegaGolemTime = 80;
+  for(int i = rage; i < 5 - rage; i += 2){
+    sf_MobSpawn(MegaGolem, AttackLoc[i], AttackPath[i], 1);
+  }
+  set_timer("MegaGolems", 160 + PlusTime*10 - MegaGolemTime);
+}
+
+if(timer_expired("Dragons")){
+  DragonTime2++;
+  if(DragonTime2 == 3){
+    DragonTime += 20;
+    DragonTime2 = 0;
+  }
+  if(DragonTime > 60)DragonTime = 60;
+  for(int i = rage; i < 5 - rage; i += 2){
+    sf_MobSpawn(DarkDragon, AttackLoc[i], AttackPath[i], 1);
+  }
+  set_timer("Dragons", 160 + PlusTime*10 - DragonTime);
+}
+
+if(timer_expired("MegaSpiders")){
+  MegaSpiderTime2++;
+  if(MegaSpiderTime2 == 3){
+    MegaSpiderTime += 20;
+    MegaSpiderTime2 = 0;
+  }
+  if(MegaSpiderTime > 60)MegaSpiderTime = 60;
+  for(int i = rage + 1; i < 5 - rage; i += 2){
+    sf_MobSpawn("Giant Glass Spider", AttackLoc[i], AttackPath[i], 1);
+  }
+  set_timer("MegaSpiders", 160 + PlusTime*10 - MegaSpiderTime);
+}
+
+//====================Glass Horror attack===================
+
+static Location[] HorrorLoc = ["red1", "red2", "red3", "red4", "blue1", "blue2", "blue3", "blue4", "yellow1", "yellow2", "yellow3", "yellow4"];
+static path[] HorrorPath = ["red1p", "red2p", "red3p", "red4p", "blue1p", "blue2p", "blue3p", "blue4p", "yellow1p", "yellow2p", "yellow3p", "yellow4p"];
+
+if(timer_expired("GlassHorror")){
+  int Aplayer = rand_int(0,3);   //which player
+  int Amine = rand_int(0,4);     //which mine
+
+  sf_MobSpawn("Glass Horror Unit", HorrorLoc[Aplayer*4 + Amine], HorrorPath[Aplayer*4 + Amine], 3);
+  set_timer("KillHorrors", 60);
+  set_timer("GlassHorror2", 500 + PlusTime*30);
+}
+
+
+if(timer_expired("GlassHorror2")){
+  if(HardM == true || MediumM == true){
+    int Aplayer = rand_int(0,3);   //which player
+    int Amine = rand_int(0,4);     //which mine
+    int Tplayer = rand_int(0,3);
+    int Tmine = rand_int(0,4);
+    for(;Aplayer == Tplayer;){
+      Tplayer = rand_int(0,3);  //Second player
+    }
+    sf_MobSpawn("Glass Horror Unit", HorrorLoc[Aplayer*4 + Amine], HorrorPath[Aplayer*4 + Amine], 3);
+    sf_MobSpawn("Glass Horror Unit", HorrorLoc[Tplayer*4 + Tmine], HorrorPath[Tplayer*4 + Tmine], 3);
+    set_timer("KillHorrors", 60);
+    set_timer("GlassHorror3", 540);
+  }
+}
+
+if(timer_expired("GlassHorror3")){
+  if(HardM == true){
+    int Amine = rand_int(0,4);     //which mine
+    int Tmine = rand_int(0,4);
+    int Rmine = rand_int(0,4);
+
+    sf_MobSpawn("Glass Horror Unit", HorrorLoc[Amine], HorrorPath[Amine], 5);
+    sf_MobSpawn("Glass Horror Unit", HorrorLoc[4 + Tmine], HorrorPath[4 + Tmine], 5);
+    sf_MobSpawn("Glass Horror Unit", HorrorLoc[8 + Rmine], HorrorPath[8 + Rmine], 5);
+    set_timer("KillHorrors", 75);
+  }
+}
+
+if(timer_expired("KillHorrors")){
+  UnitGroup GlassHorrors = find_all_unit("7", "Glass Horror Unit");
+  kill_unit_group(GlassHorrors);
+  clear_unit_group(GlassHorrors);
+}
+
+//====================choice of paths===================
+
+if(num_cities("1") + num_cities("2") + num_cities("3") < 10 &&  num_cities("1") + num_cities("2") + num_cities("3") > 3){
+    AttackPath[0] = "Left p2";
+    AttackPath[1] = "Center blue p2";
+    AttackPath[2] = "Center red p2";
+    AttackPath[3] = "Center yellow p2";
+    AttackPath[4] = "Right p2";
+}
+if(num_cities("1") + num_cities("2") + num_cities("3") < 4){
+    AttackPath[0] = "LastStend Rush left";
+    AttackPath[1] = "LastStend Rush p";
+    AttackPath[2] = "LastStend Rush p";
+    AttackPath[3] = "LastStend Rush p";
+    AttackPath[4] = "LastStend Rush Right";
+}
+if(num_cities("1") + num_cities("2") + num_cities("3") > 9){
+    AttackPath[0] = "Left p";
+    AttackPath[1] = "Center blue p";
+    AttackPath[2] = "Center red p";
+    AttackPath[3] = "Center yellow p";
+    AttackPath[4] = "Right p";
+}
+
+}
+
+
+void function sf_MobSpawn(UnitType the_unit, Location Loc, Path the_path, int Num){
+  if(Num < 0)Num = 0;
+  fill_unit_group("7", the_unit, "Attack Group", Num, Loc);
+  unit_group_attack_to_along_path("Attack Group", the_path);
+  clear_unit_group("Attack Group");
+}
+
+//safe_callback spell_can_cast_now()
+//}

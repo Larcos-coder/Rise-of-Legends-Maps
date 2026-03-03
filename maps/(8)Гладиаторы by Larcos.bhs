@@ -1,0 +1,1399 @@
+//===================== Made by Larcos ======================
+
+void function sf_build_all_statues(Leader the_leader);
+void function sf_destroy_all_statues(Leader the_leader);
+void function sf_player_jump(Leader the_leader, Region player_region, Location Loc, int angle, int army_size);
+void function sf_kill_em_all(Leader the_leader);
+void function sf_make_teams();
+void function sf_clear_teams();
+void function sf_calculate_boost_array();
+void function sf_teleport_to_arena();
+void function sf_teleport_to_small_arena();
+void function sf_teleport_to_long_arena();
+void function sf_team_sizes_to_string(int[] team_array);
+void function sf_calculate_reward(int round_num, bool book_is_selected);
+void function sf_check_victory_conditions();
+void function sf_give_reward(Leader the_leader);
+void function sf_reset_leader_combat_score();
+void function sf_update_gold_and_pop();
+void function sf_game_over();
+void function sf_set_boosts();
+void function sf_remember_players_status();
+void function sf_set_players_remembered_status();
+void function sf_scaling_rest_gold();
+bool function sf_is_valid_team_config(int num_teams);
+bool function sf_leader_under_attack(Leader the_leader);
+bool function sf_afk_check();
+int function sf_update_extra_score();
+int function sf_player_offset_angle(int j, int team_size, float player_degree_step);
+string function sf_boost_to_string(int converted_digit);
+string function sf_convert_to_clock(int time_in_seconds);
+string function sf_round_num_to_string(int round_num);
+
+labels
+{
+	POP_INCREMENT = 0,
+	GOLD_INCREMENT = 500,
+	GOLD_POP_RATIO = 50,
+    BUY_POPULATION_COST = 500,
+    PEACE_TIME_DEFAULT = 300,
+    FIGHT_TIME_DEFAULT = 720,
+    AFK_TIME_DEFAULT = 120,
+    EXTRA_TIME_DEFAULT = 60,
+	MAX_NUM_ROUNDS = 9,
+	PI = 3.14159,
+	START_POPULATION = 15,
+	START_GOLD = 1500,
+    EXTRA_GOLD = 20,
+    EXTRA_GOLD_MAX = 300
+}
+
+int test_int = -5; //---------------- delete it
+int can_cast_test = 1;
+int test_flag = 0;
+Build test_build;
+Build test_build2;
+BuildType test_buildType;
+Leader test_leader;
+location test_location;
+
+int game_status = 0; // 0 - Peace time, 1 - Fight time, -1 - Disconnect status
+bool game_over = 0;
+bool round_over = 0;
+bool extra_score_flag = 0;
+bool player_disconnected = 0;
+bool small_arena_is_seen = 0;
+bool long_arena_is_seen = 0;
+bool dont_give_gold_because_disconnect = 0;
+int number_players;
+region[] AllReg = ["RedSpawn", "BlueSpawn", "GreenSpawn", "YellowSpawn", "LightBlueSpawn", "OrangeSpawn", "PurpleSpawn", "PinkSpawn"];
+region[] PlayerReg;
+region[] RegionBuffer;
+Location[] AllLoc = ["Red1", "Red2", "Red3", "Red4", "Red5", "Red6", "Red7", "Red8", "Red9", "Red10", "Red11", 
+"Blue1", "Blue2", "Blue3", "Blue4", "Blue5", "Blue6", "Blue7", "Blue8", "Blue9", "Blue10", "Blue11", 
+"Green1", "Green2", "Green3", "Green4", "Green5", "Green6", "Green7", "Green8", "Green9", "Green10", "Green11", 
+"Yellow1", "Yellow2", "Yellow3", "Yellow4", "Yellow5", "Yellow6", "Yellow7", "Yellow8", "Yellow9", "Yellow10", "Yellow11", 
+"LightBlue1", "LightBlue2", "LightBlue3", "LightBlue4", "LightBlue5", "LightBlue6", "LightBlue7", "LightBlue8", "LightBlue9", "LightBlue10", "LightBlue11", 
+"Orange1", "Orange2", "Orange3", "Orange4", "Orange5", "Orange6", "Orange7", "Orange8", "Orange9", "Orange10", "Orange11", 
+"Purple1", "Purple2", "Purple3", "Purple4", "Purple5", "Purple6", "Purple7", "Purple8", "Purple9", "Purple10", "Purple11", 
+"Pink1", "Pink2", "Pink3", "Pink4", "Pink5", "Pink6", "Pink7", "Pink8", "Pink9", "Pink10", "Pink11"];
+
+BuildType[] StatueArray = ["Heroes1", "Infantry1", "Infantry2", "Medium1", "Medium2", "Medium3", "Strong", "Strong2", "Supply", "Flying1", "Flying2"];
+BuildGroup[] BuildArray = ["Red_Builds", "Blue_Builds", "Green_Builds", "Yellow_Builds", "LightBlue_Builds", "Orange_Builds", "Purple_Builds", "Pink_Builds"];
+Leader[] LeaderArray = ["1", "2", "3", "4", "5", "6", "7", "8"];
+Leader[] PlayerArray;
+Leader[] LeaderBuffer;
+int[] team_sizes;
+int[] team_status;
+int[] team_score;
+int[] PlayerLocation = [0, 11, 22, 33, 44, 55, 66, 77];
+int[] PlayerGoldRemember;
+int[] PlayerEnergyRemember;
+int[] PlayerPopRemember;
+int[] PlayerPopulation;
+int[] PlayerGold;
+int[] PlayerBooks;
+int[] LeaderGameStatus;
+int[] LeaderIsReady;
+int[] LeaderCombatScore;
+int[] LeaderCombatScore_display;
+int[] LeaderExtraScore;
+int[] LeaderScore;
+int LeadersAreReady_flag = 0;
+string[] LeaderIsReady_str = ["", "", "", "", "", "", "", ""];
+int[] BoostArray = [1, 1, 1, 1, 1, 1, 1, 1];
+string[] BoostArray_str = ["", "", "", "", "", "", "", ""];
+string[] PlayerNames = ["", "", "", "", "", "", "", ""];
+string time = "";
+string game_mode = "";
+string game_mode2 = "";
+string game_mode3 = "";
+string round_str = "";
+string reward = "";
+string reward2 = "";
+
+int round = 0;
+int peace_time = PEACE_TIME_DEFAULT;
+int extra_time = EXTRA_TIME_DEFAULT;
+int afk_time = AFK_TIME_DEFAULT;
+int pop_reward = 0;
+int gold_reward = 0;
+int books_reward = 0;
+
+void game_callback on_game_started(int num_players)
+{
+	int i, j;
+	scoreboard_set_title(Text("Gladiators"));
+	scoreboard_show();
+	show_script_window("READY_BUTTON");
+	show_script_window("GLADIATORS_TABLO");
+	//show_script_window("LARCOS_DEBUG");
+	dominances_disable();
+  	number_players = num_players;
+	Leader the_leader;
+	PlayerReg = AllReg;
+	for (i = PlayerLocation.length - 1; i > 0; i--) // Random point of base
+	{
+		j = rand_int(0, i + 1); // j ∈ [0, i]
+		int temp = PlayerLocation[i];
+		PlayerLocation[i] = PlayerLocation[j];
+		PlayerLocation[j] = temp;
+		region temp_reg = PlayerReg[i];
+		PlayerReg[i] = PlayerReg[j];
+		PlayerReg[j] = temp_reg;
+	}
+	for(i = 0; i < num_players; i++)
+	{
+		the_leader = get_leader(i);
+        
+		set_good(the_leader, "Wealth", 0);
+		set_good(the_leader, "Energy", 0);
+		set_good(the_leader, "timonium", 0);
+		set_base_rate(the_leader, "timonium", -10);
+		set_population_cap(the_leader, START_POPULATION);
+        
+		building_construction_disable(the_leader);
+		research_disable(the_leader);
+		diplo_disable(the_leader);
+        
+		set_explored("Center", the_leader, 200);
+		for(j = 5; j < AllLoc.length; j += 11)
+		{
+			set_explored(AllLoc[j], the_leader, 60);
+		}
+        
+		LeaderIsReady_str[i] = "#ICON50";
+		PlayerNames[i] = get_leader_name(the_leader);
+        
+		add(PlayerArray, the_leader);
+		add(LeaderBuffer, the_leader);
+		add(PlayerPopulation, START_POPULATION);
+        add(PlayerGold, START_GOLD);
+        add(PlayerBooks, 1);
+		add(LeaderGameStatus, 1);
+		add(LeaderIsReady, 0);
+		add(LeaderCombatScore, 0);
+		add(LeaderCombatScore_display, 0);
+        add(LeaderExtraScore, 0);
+        add(LeaderScore, 0);
+        add(PlayerGoldRemember, 0);
+        add(PlayerEnergyRemember, 0);
+        add(PlayerPopRemember, 0);
+	}
+}
+
+void game_callback on_game_frame() 
+{
+	int i, j;
+	Unit the_unit;
+	UnitType the_unit_type;
+
+	run_once
+	{
+		disable_all_triggers();
+		enable_trigger("start_peace_time");
+	}
+    
+    /* Open regions */
+	for(i = 0; i < PlayerArray.length; i++)
+	{
+		reveal_region("BigArena", PlayerArray[i]);
+		reveal_region("BigArena", PlayerArray[i]);
+        if(small_arena_is_seen == 1)
+        {
+            reveal_region("SmallArena", PlayerArray[i]);
+            reveal_region("SmallArena", PlayerArray[i]);
+        }
+        if(long_arena_is_seen == 1)
+        {
+            reveal_region("LongArena", PlayerArray[i]);
+            reveal_region("LongArena", PlayerArray[i]);
+        }
+	}
+	if(game_status == 1)
+    {
+		sf_check_victory_conditions();
+        
+        for(i = 0; i < PlayerArray.length; i++)
+        {
+            for(j = 0; j < LeaderBuffer.length; j++)
+            {
+                if(PlayerArray[i] == LeaderBuffer[j])
+                {
+                    LeaderCombatScore_display[i] = LeaderCombatScore[j];
+                    break;
+                }
+            }
+        }
+    }
+
+    /* Handler of round over */
+	if(round_over == 1)
+	{
+		round_over = 0;
+		for(i = 0; i < PlayerArray.length; i++)
+		{
+			sf_kill_em_all(PlayerArray[i]);
+		}
+        game_status = 0;
+		enable_trigger("start_peace_time");
+	}
+    
+    /* Check to AI players in the game */
+    if(num_ai_players() > 0)
+    {
+        for(i = 0; i < PlayerArray.length; i++)
+        {
+            if(!is_leader_human(PlayerArray[i]))
+            {
+                defeat(PlayerArray[i]);
+            }
+        }
+    }
+
+	/* Every second handler */
+	switch(time_frame() % 15)
+	{
+		case 0: // All Leaders are ready
+			LeadersAreReady_flag = 0;
+			for(i = 0; i < LeaderIsReady.length; i++)
+			{
+				if(LeaderIsReady[i] == 1)LeadersAreReady_flag++;
+			}
+			break;
+		case 1:
+            if(game_status == 1 && extra_score_flag == 0)
+            { 
+                if(sf_update_extra_score() >= EXTRA_GOLD_MAX + EXTRA_GOLD * round)
+                {
+                    extra_score_flag = 1;
+                }
+            }
+			break;
+		case 2:
+            if(game_status == 1)
+            {
+                if(sf_afk_check())
+                {
+                    afk_time--;
+                }
+                else
+                {
+                    afk_time = AFK_TIME_DEFAULT;
+                }
+                if(afk_time == 30)
+                {
+                    bubble_text_cent_screen(Text("You've been afk for too long!"));
+                }
+                else if(afk_time <= 0)
+                {
+                    bubble_text_cent_screen(Text("You've been afk for too long! Defeat is counted for everyone!"));
+                    round_over = 1;
+                }
+            }
+			break;
+		case 3:
+			break;
+		case 4:
+			break;
+		case 5:
+			break;
+		case 6:
+			break;
+		case 7:
+			break;
+	}
+    
+	trigger all_players_are_ready(LeadersAreReady_flag == number_players)
+	{
+		if(peace_time > 6)peace_time = 6;
+	}
+	if(timer_expired("one second"))
+	{
+		peace_time--;
+		time = sf_convert_to_clock(peace_time);
+		scoreboard_set_title(Text("Gladiators (" + time + ")"));
+		if(peace_time == 0){
+			enable_trigger("start_war_time");
+		}else{
+			set_timer("one second", 1);
+		}
+	}
+	if(timer_expired("make teams timer"))
+	{
+		sf_make_teams();
+		sf_calculate_boost_array();
+        sf_set_boosts();
+        if(team_sizes.length == number_players)
+        {
+        	int ratio = rand_int(0, 100);
+            if(ratio < 15 && number_players > 3 || ratio < 10)
+            {
+                sf_calculate_reward(round, 1);
+            }
+        }
+	}
+	if(timer_expired("max fight time"))
+	{
+        bubble_text_cent_screen(Text("The battle time is taking too long! The countdown began."));
+        set_timer("extra time", 1);
+    }
+    if(timer_expired("extra time"))
+	{
+        extra_time--;
+        time = sf_convert_to_clock(extra_time);
+        scoreboard_set_title(Text("Gladiators (" + time + ")"));
+		if(extra_time == 0){
+            extra_time = EXTRA_TIME_DEFAULT;
+            small_arena_is_seen = 1;
+            add_scen_ping("SmallArea");
+            for(i = 0; i < PlayerArray.length; i++)
+            {
+                set_explored("SmallArea", PlayerArray[i], 50);
+            }
+            sf_teleport_to_small_arena();
+		}else{
+			set_timer("extra time", 1);
+		}
+    }
+	trigger start_peace_time(true)
+	{
+		game_status = 0;
+        
+        stop_timer("max fight time");
+        stop_timer("extra time");
+        
+		for(i = 0; i < PlayerArray.length; i++)
+		{
+			//show_all_map_disable(PlayerArray[i]);
+			sf_build_all_statues(PlayerArray[i]);
+			remove_all_cooldowns(PlayerArray[i]);
+			LeadersAreReady_flag = 0;
+			LeaderIsReady[i] = 0;
+			LeaderIsReady_str[i] = "#ICON50";
+		}
+
+        if(dont_give_gold_because_disconnect == 0)
+        {
+            sf_update_gold_and_pop();
+        }
+        else
+        {
+            dont_give_gold_because_disconnect = 0;
+        }
+        
+		round++;
+        
+        if(round > MAX_NUM_ROUNDS)
+        {
+            sf_game_over();
+        }
+        
+		round_str = sf_round_num_to_string(round);
+		sf_clear_teams();
+		sf_calculate_reward(round, 0);
+		enable_trigger("all_players_are_ready");
+        
+		peace_time = PEACE_TIME_DEFAULT;
+        afk_time = AFK_TIME_DEFAULT;
+        extra_time = EXTRA_TIME_DEFAULT;
+        
+        sf_remember_players_status();
+        
+		set_timer("one second", 1);
+		set_timer("make teams timer", 1);
+	}
+	trigger start_war_time(true)
+	{
+		game_status = 1;
+        extra_score_flag = 0;
+        
+        sf_reset_leader_combat_score();
+        sf_scaling_rest_gold();
+        
+		for(i = 0; i < PlayerArray.length; i++)
+		{
+			//show_all_map_enable(PlayerArray[i]);
+			remove_all_cooldowns(PlayerArray[i]);
+			sf_destroy_all_statues(PlayerArray[i]);
+		}
+        
+        int ratio = rand_int(0, 100);
+        if(team_sizes.length == 2 && ratio < 5)
+        {  
+            for(i = 0; i < PlayerArray.length; i++)
+            {
+                set_explored("LongArea3", PlayerArray[i], 200);
+            }
+            long_arena_is_seen = 1;
+            sf_teleport_to_long_arena();
+        }
+        else
+        {
+            sf_teleport_to_arena(); 
+        }
+        
+        set_timer("max fight time", FIGHT_TIME_DEFAULT);
+	}
+	if(player_disconnected)
+	{
+		player_disconnected = 0;
+
+		//if(game_status == 0)
+        round--;
+        enable_trigger("start_peace_time");
+        game_status = -1;
+        for(i = 0; i < PlayerArray.length; i++)
+        {
+            sf_kill_em_all(PlayerArray[i]);
+            sf_destroy_all_statues(PlayerArray[i]);
+        }
+        sf_set_players_remembered_status();
+        
+        dont_give_gold_because_disconnect = 1;
+	}
+}
+
+// ---------------------------------- FUNCTIONS -------------------------------------------
+
+int function sf_update_extra_score()
+{
+    int i;
+    int max_score = 0;
+    for(i = 0; i < LeaderBuffer.length; i++)
+    {
+        if(sf_leader_under_attack(LeaderBuffer[i]))
+        {
+            LeaderExtraScore[i] += EXTRA_GOLD;
+            LeaderCombatScore[i] += EXTRA_GOLD;
+        }
+        if(max_score < LeaderExtraScore[i])
+        {
+            max_score = LeaderExtraScore[i];
+        }
+    }
+    return max_score;
+}
+
+void function sf_remember_players_status()
+{
+    int i;
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        PlayerGoldRemember[i] = get_good(PlayerArray[i], "Wealth");
+        PlayerEnergyRemember[i] = get_good(PlayerArray[i], "Energy");
+        PlayerPopRemember[i] = PlayerPopulation[i];
+    }
+}
+
+void function sf_set_players_remembered_status()
+{
+    int i;
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        set_good(PlayerArray[i], "Wealth", PlayerGoldRemember[i]);
+        set_good(PlayerArray[i], "Energy", PlayerEnergyRemember[i]);
+        PlayerPopulation[i] = PlayerPopRemember[i];
+    }
+}
+
+void function sf_scaling_rest_gold()
+{
+    int i;
+    int BufferGood = 0;
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        BufferGood = get_good(PlayerArray[i], "Wealth");
+        set_good(PlayerArray[i], "Wealth", (BufferGood*100)/BoostArray[i]);
+        BufferGood = 0;
+        BufferGood = get_good(PlayerArray[i], "Energy");
+        set_good(PlayerArray[i], "Energy", (BufferGood*100)/BoostArray[i]);
+    }
+}
+
+bool function sf_afk_check()
+{
+    int i;
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        if(sf_leader_under_attack(PlayerArray[i]))
+            return false;
+    }
+    return true;
+}
+
+bool function sf_leader_under_attack(Leader the_leader)
+{
+    UnitGroup leader_group;
+    leader_group = find_unit(the_leader, "");
+    if(is_unit_group_under_attack(leader_group))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+bool function sf_is_valid_team_config(int num_teams)
+{
+	int i;
+	for(i = 0; i < num_teams - 1; i++)
+	{
+		if (team_sizes[i] < team_sizes[i + 1])
+			return false;
+	}
+	if(num_teams <= 2 || num_teams > number_players/2)
+		return true;
+
+	for(i = 0; i < num_teams; i++)
+	{
+		if(team_sizes[i] == 1)
+			return false; // If there is a loner in more than 2 teams, it's bad.
+	}
+	return true;
+}
+
+void function sf_give_reward(Leader the_leader)
+{
+    test_flag++;
+    int i = 0;
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        if(the_leader == PlayerArray[i])
+        {
+            PlayerPopulation[i] += pop_reward;
+            give_good(the_leader, "Wealth", gold_reward);
+            give_good(the_leader, "Energy", gold_reward);
+            give_good(the_leader, "Research Points", books_reward);
+            LeaderScore[i]++;
+            return;
+        }
+    }
+}
+
+void function sf_update_gold_and_pop()
+{
+    int i = 0;
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        PlayerPopulation[i] += POP_INCREMENT;
+        give_good(PlayerArray[i], "Wealth", START_GOLD + GOLD_INCREMENT * round);
+        give_good(PlayerArray[i], "Energy", START_GOLD + GOLD_INCREMENT * round);
+        set_population_cap(PlayerArray[i], PlayerPopulation[i]);
+    }
+}
+
+void function sf_reset_leader_combat_score()
+{
+    int i;
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        LeaderCombatScore[i] = 0;
+        LeaderExtraScore[i] = 0;
+        LeaderCombatScore_display[i] = 0;
+    }
+}
+
+void function sf_game_over()
+{
+    game_over = 1; // bool flag
+    int i;
+    int max_score = 0;
+    sf_clear_teams(); 
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        if(LeaderScore[i] > max_score)
+        {
+            max_score = LeaderScore[i];
+        }
+    }
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+        if(LeaderScore[i] == max_score)
+        {
+            victory(PlayerArray[i]);
+        }
+        else
+        {
+            defeat(PlayerArray[i]);
+        }
+    }
+}
+
+void function sf_check_victory_conditions()
+{
+	int i, j, k, index = 0, counter = 0;
+	int sum_team_status = 0;
+	bool team_defeated;
+	UnitGroup player_army;
+	for(i = 0; i < team_sizes.length; i++)
+	{
+		team_defeated = 1;
+		int team_start = index;
+		for(j = 0; j < team_sizes[i]; j++)
+		{
+			player_army = find_unit(LeaderBuffer[index++], "");
+			if(unit_group_length(player_army) > 0)team_defeated = 0;
+		}
+		if(team_defeated && team_status[i] != 0)
+		{
+			team_status[i] = 0;
+			if(team_sizes.length == 2)
+			{
+				for(j = 0; j < team_sizes[i]; j++)
+				{
+					for(k = 0; k < PlayerArray.length; k++)
+					{
+						if(PlayerArray[k] == LeaderBuffer[team_start + j])
+						{
+							LeaderGameStatus[k] = 0;
+						}
+					}
+				}
+			}
+		}
+	}
+	for(i = 0; i < team_status.length; i++)
+	{
+		sum_team_status += team_status[i];
+	}
+	if(sum_team_status < 2)
+	{
+		if(team_sizes.length == 2) // 2 team victory
+		{
+			for(i = 0; i < LeaderGameStatus.length; i++)
+			{
+				if(LeaderGameStatus[i] == 1){
+					sf_give_reward(PlayerArray[i]);
+				}else{
+					LeaderGameStatus[i] = 1;
+				}
+			}
+		}
+		else // more than 2 team victory
+        { 
+            // battle score counting
+            int team_start = 0;
+            for(i = 0; i < team_sizes.length; i++)
+            {
+                for(j = 0; j < team_sizes[i]; j++)
+                {
+                    team_score[i] += LeaderCombatScore[team_start + j];
+                }
+                team_start += team_sizes[i];
+            }
+            
+            /* finding max score */
+            int team_max_score = 0;
+            for(i = 0; i < team_score.length; i++)
+            {
+                if(team_max_score < team_score[i])
+                {
+                    team_max_score = team_score[i];
+                }
+            }
+            
+            /* give reward all teams with this score */
+            team_start = 0;
+            for(i = 0; i < team_sizes.length; i++)
+            {
+                if(team_score[i] == team_max_score)
+                {
+                    for(j = 0; j < team_sizes[i]; j++)
+                    {
+                        sf_give_reward(LeaderBuffer[team_start + j]);
+                    }
+                }
+                team_start += team_sizes[i];
+            }
+        }
+		round_over = 1;
+	}
+}
+
+void function sf_clear_teams()
+{
+	int i, j;
+	for (i = 0; i < number_players; i++)
+	{
+		for (j = i + 1; j < number_players; j++)
+		{
+			while(!have_peace(PlayerArray[i], PlayerArray[j]))
+				make_peace(PlayerArray[i], PlayerArray[j]);
+		}
+	}
+	for (i = 0; i < number_players; i++)
+	{
+		for (j = i + 1; j < number_players; j++)
+		{
+			while(!have_war(PlayerArray[i], PlayerArray[j]))
+				declare_war(PlayerArray[i], PlayerArray[j]);
+		}
+	}
+}
+
+void function sf_make_teams()
+{
+	int i, j;
+	LeaderBuffer = PlayerArray;
+	clear_array(RegionBuffer);
+	for(i = 0; i < number_players; i++)
+	{
+		add(RegionBuffer, PlayerReg[i]);
+	}
+	//int Max_num_teams = 8;
+	//int Min_num_teams = 2;
+	int num_teams = rand_int(2, number_players/2 + 2);
+	int buffer;
+	if(num_teams > number_players/2)
+	{
+		num_teams = number_players;
+	}
+	for(i = LeaderBuffer.length - 1; i > 0; i--) // Shuffle the players
+	{
+		j = rand_int(0, i + 1); // j ∈ [0, i]
+		Leader temp = LeaderBuffer[i];
+		LeaderBuffer[i] = LeaderBuffer[j];
+		LeaderBuffer[j] = temp;
+		region temp_reg = RegionBuffer[i];
+		RegionBuffer[i] = RegionBuffer[j];
+		RegionBuffer[j] = temp_reg;
+	}
+	do
+	{
+		clear_array(team_sizes);
+		clear_array(team_status);
+        clear_array(team_score);
+		int remaining = number_players;
+		for(i = 0; i < num_teams; i++)
+		{
+			int min = 1;
+			int max = remaining - (num_teams - i - 1);
+			buffer = (i == num_teams - 1) ? remaining : (rand_int(0, max - min + 1)) + min;
+			add(team_sizes, buffer);
+			add(team_status, 1);
+            add(team_score, 0);
+			remaining -= buffer;
+		}
+	} while (!sf_is_valid_team_config(num_teams));
+	j = 0;
+	int index = 0, team = 0;
+	for (team = 0; team < team_sizes.length; team++)
+	{
+		int team_size = team_sizes[team];
+		// Пройти по всем парам внутри команды и заключить союз
+		for (i = 0; i < team_size; i++)
+		{
+			for (j = i + 1; j < team_size; j++)
+			{
+				make_alliance(LeaderBuffer[index + i], LeaderBuffer[index + j]);
+			}
+		}
+		index += team_size; // перейти к следующей команде
+	}
+	sf_team_sizes_to_string(team_sizes);
+}
+
+void function sf_build_all_statues(Leader the_leader)
+{
+	int i;
+	int start_loc;
+	for(i = 0; i < PlayerArray.length; i++)
+	{
+		if(PlayerArray[i] == the_leader)
+		{
+			start_loc = PlayerLocation[i];
+			break;
+		}
+	}
+	for(i = 0; i < StatueArray.length; i++)
+	{
+		create_building(the_leader, StatueArray[i], AllLoc[start_loc + i]);
+	}
+}
+
+void function sf_destroy_all_statues(Leader the_leader)
+{
+	BuildGroup the_build_group = find_building(the_leader, "");
+	destroy_build_group(the_build_group);
+}
+
+void function sf_teleport_to_arena()
+{
+	int i, j, index = 0, x_coord, y_coord;
+	int radius = 40 + 2*number_players;
+	int team_num = team_sizes.length;
+	int rand_initial_angle = rand_int(0, 360);
+	int team_degree_step = 360/team_num;
+	int player_degree_step = 15;
+	Location the_loc, spawn_center = "Center";
+	int center_x_coord = location_get_x(spawn_center);
+	int center_y_coord = location_get_y(spawn_center);
+	for(i = 0; i < team_num; i++)
+	{
+		for(j = 0; j < team_sizes[i]; j++)
+		{
+			int offset_angle = sf_player_offset_angle(j, team_sizes[i], player_degree_step);
+			int total_angle = rand_initial_angle + team_degree_step * i + offset_angle;
+			x_coord = center_x_coord + (int)(radius * cos(total_angle));
+			y_coord = center_y_coord + (int)(radius * sin(total_angle));
+			the_loc = create_location(x_coord, y_coord);
+			sf_player_jump(LeaderBuffer[index], RegionBuffer[index], the_loc, total_angle + 180, 8);
+			index++;
+		}
+	}
+}
+
+void function sf_teleport_to_small_arena()
+{
+	int i, j, index = 0, x_coord, y_coord;
+	int radius = 12;
+	int team_num = team_sizes.length;
+	int rand_initial_angle = rand_int(0, 360);
+	int team_degree_step = 360/team_num;
+	int player_degree_step = 15;
+	Location the_loc, spawn_center = "SmallArea";
+	int center_x_coord = location_get_x(spawn_center);
+	int center_y_coord = location_get_y(spawn_center);
+	for(i = 0; i < team_num; i++)
+	{
+		for(j = 0; j < team_sizes[i]; j++)
+		{
+			int offset_angle = sf_player_offset_angle(j, team_sizes[i], player_degree_step);
+			int total_angle = rand_initial_angle + team_degree_step * i + offset_angle;
+			x_coord = center_x_coord + (int)(radius * cos(total_angle));
+			y_coord = center_y_coord + (int)(radius * sin(total_angle));
+			the_loc = create_location(x_coord, y_coord);
+			sf_player_jump(LeaderBuffer[index], "BigArena", the_loc, total_angle + 180, 7);
+			sf_player_jump(LeaderBuffer[index], "LongArena", the_loc, total_angle + 180, 7);
+			index++;
+		}
+	}
+}
+
+void function sf_teleport_to_long_arena()
+{
+	int i, j, index = 0, x_coord, y_coord;
+	int team_num = team_sizes.length;
+	int rand_side = rand_int(0, 2);
+	int player_x_step = 5;
+    Location the_loc;
+	Location LongArea1 = "LongArea1";
+    Location LongArea2 = "LongArea2";
+	int side_x_coord;
+	int side_y_coord;
+    int angle = 0;
+	for(i = 0; i < team_num; i++)
+	{
+        if(rand_side == i)
+        {
+            side_x_coord = location_get_x(LongArea1);
+            side_y_coord = location_get_y(LongArea1);
+            angle = 180;
+        }
+        else
+        {
+            side_x_coord = location_get_x(LongArea2);
+            side_y_coord = location_get_y(LongArea2);    
+            angle = 0;
+        }
+		for(j = 0; j < team_sizes[i]; j++)
+		{
+			int offset_y = sf_player_offset_angle(j, team_sizes[i], player_x_step);
+			x_coord = side_x_coord;
+			y_coord = side_y_coord  + offset_y;
+			the_loc = create_location(x_coord, y_coord);
+			sf_player_jump(LeaderBuffer[index], RegionBuffer[index], the_loc, angle, 8);
+			index++;
+		}
+	}
+}
+
+int function sf_player_offset_angle(int j, int team_size, float player_degree_step)
+{
+	float offset;
+
+	if (team_size % 2 == 1) // нечётное количество игроков
+	{
+		int center = team_size / 2; // целое деление
+		offset = (j - center) * player_degree_step;
+	}
+	else // чётное количество игроков
+	{
+		int half = team_size / 2;
+		offset = (j - half + 0.5) * player_degree_step;
+	}
+
+	return (int)(offset);
+}
+
+void function sf_player_jump(Leader the_leader, Region player_region, Location Loc, int angle, int army_size){
+  int scan;
+  Unit the_unit;
+  UnitGroup PlayerArmy = find_unit(the_leader,"");
+  int Jump = 0;
+  for(scan = 0; scan < unit_group_length(PlayerArmy); scan++){
+    Jump++;
+    the_unit = unit_at_index(PlayerArmy, scan);
+    if(is_unit_in_region(the_unit, player_region)){
+      add_unit_to_group("Main Group", the_unit);
+      if(Jump == army_size - 1){
+        unit_group_jump_move("Main Group", Loc, angle);
+        clear_unit_group("Main Group");
+        Jump = 0;
+      }
+    }
+  }
+  unit_group_jump_move("Main Group", Loc, angle);
+  clear_unit_group("Main Group");
+  clear_unit_group(PlayerArmy);
+}
+
+void function sf_kill_em_all(Leader the_leader){
+  for(;num_units(the_leader) > 0;){
+    UnitGroup KillArmy = find_unit(the_leader,"");
+    remove_unit_group(KillArmy);
+    clear_unit_group(KillArmy);
+  }
+}
+
+void function sf_calculate_boost_array()
+{
+	int index = 0;
+	int max_size = 0;
+	int i, j, k;
+
+	for (i = 0; i < team_sizes.length; i++)
+	{
+		if (team_sizes[i] > max_size)
+			max_size = team_sizes[i];
+	}
+	for (i = 0; i < team_sizes.length; i++)
+	{
+		int size = team_sizes[i];
+		int boost = 100*max_size /size;
+
+		for (j = 0; j < size; j++)
+		{
+			Leader current_leader = LeaderBuffer[index];
+
+			for (k = 0; k < PlayerArray.length; k++)
+			{
+				if (PlayerArray[k] == current_leader)
+				{
+					BoostArray[k] = boost;
+					BoostArray_str[k] = sf_boost_to_string(boost);
+					break;
+				}
+			}
+			index += 1;
+		}
+	}
+}
+
+void function sf_set_boosts()
+{
+    int i;
+    for(i = 0; i < PlayerArray.length; i++)
+    {
+    /* BoostArray has value*100, because it's int */
+        if(BoostArray[i] != 100)
+        {
+            /* (round - 1) because this function is called after round increment */
+            set_population_cap(PlayerArray[i], (PlayerPopulation[i] * (BoostArray[i] + BoostArray[i]/4))/100);
+            give_good(PlayerArray[i], "Wealth", ((START_GOLD + GOLD_INCREMENT * (round - 1))* (BoostArray[i] + BoostArray[i]/4 - 100))/100);
+            give_good(PlayerArray[i], "Energy", ((START_GOLD + GOLD_INCREMENT * (round - 1))* (BoostArray[i] + BoostArray[i]/4 - 100))/100);
+        }
+    }
+}
+
+string function sf_boost_to_string(int converted_digit)
+{
+	if(converted_digit%100 == 0)return "x" + (string)(converted_digit/100);
+	return "x" + (string)(converted_digit/100) + "," + (string)(converted_digit%100);
+}
+
+string function sf_convert_to_clock(int time_in_seconds)
+{
+    string clock;
+    int seconds;
+    int minutes;
+
+    minutes = time_in_seconds / 60;
+    seconds = time_in_seconds % 60;
+
+    if (seconds > 9)
+    {
+        clock = parse("$s0:$s1", minutes, seconds);
+    }
+    else
+    {
+        clock = parse("$s0:0$s1", minutes, seconds);
+    }
+    return clock;
+}
+
+void function sf_team_sizes_to_string(int[] team_array)
+{
+	string result = "";
+	if(team_array.length > 4){
+		game_mode = "Free For All";
+		//game_mode = "";
+		//game_mode3 = "";
+		return;
+	}
+	int i;
+	for(i = 0; i < team_array.length; i++)
+	{
+		if(i < team_array.length - 1){
+			result += (string)(team_array[i]) + " vs ";
+		}else{
+			result += (string)(team_array[i]);
+		}
+	}
+	game_mode = result;
+}
+
+string function sf_round_num_to_string(int round_num)
+{
+	return (string)(round_num) + "/" + (string)(MAX_NUM_ROUNDS);
+}
+
+void function sf_calculate_reward(int round_num, bool book_is_selected)
+{
+    books_reward = 0;
+    gold_reward = 0;
+    pop_reward = 0;
+    if(book_is_selected == 1)
+    {
+        books_reward = 1;
+    	reward = books_reward + " #ICON3";
+        gold_reward = 0;
+        pop_reward = 0;
+        return;
+    }
+    /* Main formula */
+	pop_reward = 1 + round_num*2 + rand_int(round_num, round_num + 3);
+    
+	int ratio = rand_int(0, 100);
+	if(ratio < 20){
+		gold_reward = 0;
+		reward = pop_reward + " #ICON19";
+	}
+	else if(ratio > 40){
+		gold_reward = pop_reward * GOLD_POP_RATIO;
+		pop_reward = 0;
+		reward = gold_reward + " #ICON2";
+	}else{
+		gold_reward = (pop_reward * ratio / 100)*GOLD_POP_RATIO;
+		pop_reward -= pop_reward * ratio / 100;
+		reward = pop_reward + " #ICON19 " + gold_reward + " #ICON2";
+	}
+}
+
+// ------------------------------------ CALLBACKS ----------------------------------------
+
+void game_callback on_spell_cast(SpellType the_spell, Unit unit_caster, Leader leader_caster, Location target_loc, Unit target_unit, Build target_building){
+    int i, j;
+    if(the_spell == "Buy population")
+    {
+        BuildGroup the_build_group;
+        Build the_build;
+        for(i = 0; i < PlayerArray.length; i++)
+        {
+            the_build_group = find_building(PlayerArray[i], "");
+            
+            for(j = 0; j < build_group_length(the_build_group); j++)
+            {
+                the_build = building_at_index(the_build_group, j);
+                
+                if(are_locations_equal(target_loc, building_location(the_build)))
+                {
+                    PlayerPopulation[i] += 10;
+                    if(BoostArray[i] != 100)
+                    {
+                        take_good(PlayerArray[i], "Wealth",(BUY_POPULATION_COST * (BoostArray[i] + BoostArray[i]/4 - 100))/100);
+                        take_good(PlayerArray[i], "Energy",(BUY_POPULATION_COST * (BoostArray[i] + BoostArray[i]/4 - 100))/100);
+                        set_population_cap(PlayerArray[i], (PlayerPopulation[i] * (BoostArray[i] + BoostArray[i]/4))/100);
+                    }
+                    else
+                    {
+                        set_population_cap(PlayerArray[i], PlayerPopulation[i]);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+}
+
+void game_callback on_unit_killed (Unit the_unit) {
+    int i = 0;
+
+	Leader damage_leader = unit_get_damage_leader(the_unit);
+    Leader lost_leader = get_unit_leader(the_unit);
+
+    int unit_cost_wealth = get_unit_type_cost(get_unit_type(the_unit), "Wealth", lost_leader);
+    int unit_cost_energy = get_unit_type_cost(get_unit_type(the_unit), "Energy", lost_leader);
+
+/* If the game status is Fight Time, count points to win */
+/* Else if the game status is Peace time, return unit cost to player */
+	if(game_status == 1) // Fight
+    {
+        for(i = 0; i < PlayerArray.length; i++)
+        {
+            if(LeaderBuffer[i] == damage_leader)
+            {
+                LeaderCombatScore[i] += unit_cost_wealth + unit_cost_energy;
+                return;
+            }
+        }
+    }
+    else if(game_status == 0) // Peace
+    {
+        give_good(lost_leader, "Wealth", unit_cost_wealth);
+        give_good(lost_leader, "Energy", unit_cost_energy);
+    }
+}
+
+void game_callback on_leader_defeated (Leader defeated)
+{
+	if(!game_over)
+	{
+		int i;
+        sf_clear_teams();
+		number_players--;
+		for(i = 0; i < PlayerArray.length; i++)
+		{
+			if(PlayerArray[i] == defeated)
+			{
+                sf_kill_em_all(PlayerArray[i]);
+                sf_destroy_all_statues(PlayerArray[i]);
+                remove_index(PlayerArray, i);
+                remove_index(PlayerLocation, i);
+                remove_index(PlayerReg, i);
+                remove_index(LeaderIsReady, i);
+                remove_index(LeaderIsReady_str, i);
+                remove_index(PlayerNames, i);
+                remove_index(BoostArray, i);
+                remove_index(BoostArray_str, i);
+                remove_index(PlayerPopulation, i);
+                remove_index(PlayerGold, i);
+                remove_index(PlayerBooks, i);
+                remove_index(LeaderGameStatus, i);
+                remove_index(LeaderCombatScore, i);
+                remove_index(LeaderCombatScore_display, i);
+                remove_index(LeaderExtraScore, i);
+                remove_index(LeaderScore, i);
+                remove_index(PlayerGoldRemember, i);
+                remove_index(PlayerEnergyRemember, i);
+                remove_index(PlayerPopRemember, i);
+                clear_array(team_sizes);
+                clear_array(team_status);
+                clear_array(team_score);
+                clear_array(RegionBuffer);
+                clear_array(LeaderBuffer);
+                player_disconnected = 1;
+                break;
+			}
+		}
+	}
+} 
+
+void game_callback on_leader_button_clicked (String window_id, String id_string, int id_num, Leader the_leader) 
+{
+	if(window_id == "READY_BUTTON")
+	{
+		int index;
+		for(index = 0; index < PlayerArray.length; index++)
+		{
+			if(PlayerArray[index] == the_leader)break;
+		}
+		if(!LeaderIsReady[index])
+		{
+			LeaderIsReady[index] = 1;
+			LeaderIsReady_str[index] = "#ICON49";
+			bubble_text_cent_screen(Text(get_leader_name(the_leader) + " is ready!"));
+		}
+	}
+}
+
+// ----------------------------------- DEBUG & TABLO ----------------------------------
+
+text ui_callback on_label_set_text_id(string window, string label_id, int id_num, text text_msg)
+{
+	if (id_num < 1 || id_num > 22)
+	{
+		return "";
+	}
+	if(window == "LARCOS_DEBUG")
+	{
+		switch(id_num)
+		{
+			case 1:
+				return Text("Team Sizes: " + team_sizes[0] + " " + team_sizes[1] + " " + team_sizes[2] + " " + team_sizes[3] + " " + team_sizes[4] + " " + team_sizes[5] + " " + team_sizes[6] + " " + team_sizes[7]);
+			case 2:
+				return Text("BoostArray: " + text(BoostArray[0]) + " " + BoostArray[1] + " " + BoostArray[2] + " " + BoostArray[3] + " " + BoostArray[4] + " " + BoostArray[5] + " " + BoostArray[6] + " " + BoostArray[7]);
+			case 3:
+				return Text("BoostArray: " + BoostArray_str[0] + " " + BoostArray_str[1] + " " + BoostArray_str[2] + " " + BoostArray_str[3] + " " + BoostArray_str[4] + " " + BoostArray_str[5] + " " + BoostArray_str[6] + " " + BoostArray_str[7]);
+            case 4:
+                return Text(parse(text_msg, PlayerGoldRemember));
+			case 5:
+				return Text(test_flag);
+			case 6:
+				return Text(parse(text_msg, PlayerEnergyRemember));
+            case 7:
+				return Text(parse(text_msg, team_status));
+            case 8:
+				return Text(parse(text_msg, test_location));
+            case 10:
+                return Text(parse(text_msg, PlayerArray));
+			case 18:
+				return Text(parse(text_msg, team_sizes));
+		}
+	}
+	if(window == "GLADIATORS_TABLO")
+	{
+		switch(label_id)
+		{
+			case "TITLE":
+				switch(id_num)
+				{
+					case 1:
+						return Text("Ready");
+					case 2:
+						return Text("Player Name");
+					case 3:
+						return Text("Balance Boost");
+					case 4:
+						return Text("#ICON48");
+					case 5:
+						return Text("#ICON134");
+				}
+			case "READY":
+				switch(id_num)
+				{
+					case 1:
+						return Text(LeaderIsReady_str[0]);
+					case 2:
+						return Text(LeaderIsReady_str[1]);
+					case 3:
+						return Text(LeaderIsReady_str[2]);
+					case 4:
+						return Text(LeaderIsReady_str[3]);
+					case 5:
+						return Text(LeaderIsReady_str[4]);
+					case 6:
+						return Text(LeaderIsReady_str[5]);
+					case 7:
+						return Text(LeaderIsReady_str[6]);
+					case 8:
+						return Text(LeaderIsReady_str[7]);
+				}
+			case "NAME":
+				switch(id_num)
+				{
+					case 1:
+						return Text(PlayerNames[0]);
+					case 2:
+						return Text(PlayerNames[1]);
+					case 3:
+						return Text(PlayerNames[2]);
+					case 4:
+						return Text(PlayerNames[3]);
+					case 5:
+						return Text(PlayerNames[4]);
+					case 6:
+						return Text(PlayerNames[5]);
+					case 7:
+						return Text(PlayerNames[6]);
+					case 8:
+						return Text(PlayerNames[7]);
+				}
+			case "BOOST":
+				switch(id_num)
+				{
+					case 1:
+						return Text(BoostArray_str[0]);
+					case 2:
+						return Text(BoostArray_str[1]);
+					case 3:
+						return Text(BoostArray_str[2]);
+					case 4:
+						return Text(BoostArray_str[3]);
+					case 5:
+						return Text(BoostArray_str[4]);
+					case 6:
+						return Text(BoostArray_str[5]);
+					case 7:
+						return Text(BoostArray_str[6]);
+					case 8:
+						return Text(BoostArray_str[7]);
+				}
+			case "GAME MODE":
+				switch(id_num)
+				{
+					case 1:
+						return Text("Round");
+					case 2:
+						return Text(round_str);
+					case 3:
+						return Text("Game mode");
+					case 4:
+						return Text(game_mode);
+					case 5:
+						return Text(game_mode2);
+					case 6:
+						return Text(game_mode3);
+					case 7:
+						return Text("Reward");
+					case 8:
+						return Text(reward);
+					case 9:
+						return Text(reward2);
+				}
+			case "POPULATION":
+				switch(id_num)
+				{
+					case 1:
+						return Text(LeaderCombatScore_display[0]);
+					case 2:
+						return Text(LeaderCombatScore_display[1]);
+					case 3:
+						return Text(LeaderCombatScore_display[2]);
+					case 4:
+						return Text(LeaderCombatScore_display[3]);
+					case 5:
+						return Text(LeaderCombatScore_display[4]);
+					case 6:
+						return Text(LeaderCombatScore_display[5]);
+					case 7:
+						return Text(LeaderCombatScore_display[6]);
+					case 8:
+						return Text(LeaderCombatScore_display[7]);
+				}
+			case "SCORE":
+				switch(id_num)
+				{
+					case 1:
+						return Text(LeaderScore[0]);
+					case 2:
+						return Text(LeaderScore[1]);
+					case 3:
+						return Text(LeaderScore[2]);
+					case 4:
+						return Text(LeaderScore[3]);
+					case 5:
+						return Text(LeaderScore[4]);
+					case 6:
+						return Text(LeaderScore[5]);
+					case 7:
+						return Text(LeaderScore[6]);
+					case 8:
+						return Text(LeaderScore[7]);
+				}
+		}
+	}
+}
